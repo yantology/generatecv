@@ -1,0 +1,98 @@
+# Main project metadata
+[project]
+name = "generatecv"             # Package name
+version = "0.1.0"               # Package version
+description = "Add your description here"
+readme = "README.md"            # README file path
+authors = [{ name = "yantology", email = "work@yantology.dev" }]
+requires-python = ">=3.13"      # Required Python version
+dependencies = [
+    "pydantic>=2.11.5", # Data validation library
+    "pyyaml>=6.0.2", # YAML parsing and writing
+    "reportlab>=4.4.1", # PDF generation library
+    "setuptools>=80.8.0",
+]
+
+# Command-line scripts provided by the package
+[project.scripts]
+generatecv-example = "tool.main:main"
+
+# Build system configuration
+[build-system]
+requires = ["hatchling"]        # Build system requirements
+build-backend = "hatchling.build"  # Build backend to use
+
+# Development dependencies for the project
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",        # Testing framework
+    "pytest-cov>=4.1.0",    # Code coverage plugin for pytest
+    "mypy>=1.5.1",          # Static type checker
+    "ruff>=0.1.5",          # Fast Python linter written in Rust
+    "black>=23.9.1",        # Code formatter with an opinionated style
+    "types-PyYAML>=6.0.12.12", # Type stubs for PyYAML
+]
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]          # Directory containing test files
+python_files = "test_*.py"     # Pattern for test files
+python_functions = "test_*"    # Pattern for test functions
+pythonpath = "."               # Add the current directory to Python path
+
+# Static type checking configuration
+[tool.mypy]
+python_version = "3.13"         # Python version to target
+warn_return_any = true          # Warn when a function returns Any
+warn_unused_configs = true      # Warn about unused configuration options
+disallow_untyped_defs = true    # Require type annotations for functions
+disallow_incomplete_defs = true # Require complete type annotations
+check_untyped_defs = true       # Type-check bodies of functions without annotations
+disallow_untyped_decorators = true # Require decorated functions to be typed
+no_implicit_optional = true     # Don't allow None as an implicit value for Optional
+strict_optional = true          # Enable strict checking of Optional types
+
+# Override settings for test files
+[[tool.mypy.overrides]]
+module = ["tests.*"]            # Apply to all modules under tests/
+disallow_untyped_defs = false   # Allow functions without type annotations in tests
+disallow_incomplete_defs = false # Allow partial type annotations in tests
+
+[tool.ruff]
+# Python version target
+target-version = "py313"
+# Match black's line length setting
+line-length = 88
+# Rule selections:
+select = [
+    "E",   # pycodestyle errors (PEP 8 standard errors)
+    "F",   # PyFlakes rules (detect logical errors and undefined names)
+    "B",   # flake8-bugbear rules (detect potential bugs and design problems)
+    "I",   # isort rules (sort imports)
+    "N",   # pep8-naming rules (enforce consistent naming conventions)
+    "UP",  # pyupgrade rules (update syntax to newer Python versions)
+    "PL",  # Pylint rules (code quality and errors)
+    "RUF", # Ruff-specific rules
+]
+# Rules to ignore
+ignore = []
+
+# Per-file rule exclusions
+[tool.ruff.per-file-ignores]
+# Ignore numeric magic value rule in test files
+"tests/*" = ["PLR2004"]  # Disallow magic values in comparisons/assignments in tests
+
+# Black formatter configuration
+[tool.black]
+# Match the line length with Ruff
+line-length = 88
+# Target Python version
+target-version = ["py313"]
+
+# This section is for uv dependency management
+[dependency-groups]
+# Development dependencies for the project
+dev = [
+    "pytest>=8.3.5",  # Testing framework
+    "setuptools>=68.0.0",  # For setup.py support
+]

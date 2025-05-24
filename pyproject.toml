@@ -31,6 +31,8 @@ dev = [
     "ruff>=0.1.5",             # Fast Python linter written in Rust
     "black>=23.9.1",           # Code formatter with an opinionated style
     "types-PyYAML>=6.0.12.12", # Type stubs for PyYAML
+    "types-setuptools>=80.8.0",     # Type stubs for setuptools
+    "types-reportlab>=4.0.0.20240331", # Type stubs for reportlab
 ]
 
 # Pytest configuration
@@ -97,6 +99,9 @@ target-version = ["py313"]
 [dependency-groups]
 # Development dependencies for the project
 dev = [
-    "pytest>=8.3.5",      # Testing framework
-    "setuptools>=68.0.0", # For setup.py support
+    "pytest>=8.3.5",                   # Testing framework
+    "setuptools>=68.0.0",              # For setup.py support
+    "types-setuptools>=80.8.0",        # Type stubs for setuptools
+    "types-reportlab>=4.0.0.20240331", # Type stubs for reportlab
+    "types-PyYAML>=6.0.12.12",         # Type stubs for PyYAML
 ]

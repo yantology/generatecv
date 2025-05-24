@@ -31,6 +31,8 @@ setup(
             "ruff>=0.1.5",
             "black>=23.9.1",
             "types-PyYAML>=6.0.12.12",
+            "types-setuptools>=80.8.0",
+            "types-reportlab>=4.0.0.20240331",
         ],
     },
     classifiers=[

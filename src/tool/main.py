@@ -11,7 +11,7 @@ def download_example_yaml(output_path: str | None = None) -> str | bool:
                                     If None, returns the YAML content as a string.
 
     Returns:
-        str or bool: YAML content if output_path is None, 
+        str or bool: YAML content if output_path is None,
                      otherwise True if file was saved successfully.
     """
     # Get the path to the example YAML file

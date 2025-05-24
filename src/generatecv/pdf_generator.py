@@ -236,9 +236,7 @@ class _PDFGenerator:
 
             # Description for the role
             if role.description:
-                self.elements.append(
-                    Paragraph(role.description, self.styles["Normal"])
-                )
+                self.elements.append(Paragraph(role.description, self.styles["Normal"]))
 
             # Achievements for the role
             if role.achievements:
@@ -280,9 +278,7 @@ class _PDFGenerator:
                 Paragraph(f"GPA: {education.gpa}", self.styles["Normal"])
             )
         if education.details:
-            self.elements.append(
-                Paragraph(education.details, self.styles["Normal"])
-            )
+            self.elements.append(Paragraph(education.details, self.styles["Normal"]))
 
     def _add_skills(self, skills: Iterable[Skill]) -> None:
         """Add skills section to the PDF."""
@@ -320,9 +316,7 @@ class _PDFGenerator:
 
         # Description
         if project.description:
-            self.elements.append(
-                Paragraph(project.description, self.styles["Normal"])
-            )
+            self.elements.append(Paragraph(project.description, self.styles["Normal"]))
 
         # Technologies used
         if project.technologies:

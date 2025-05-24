@@ -63,6 +63,8 @@ disallow_incomplete_defs = false # Allow partial type annotations in tests
 target-version = "py313"
 # Match black's line length setting
 line-length = 88
+
+[tool.ruff.lint]
 # Rule selections:
 select = [
     "E",   # pycodestyle errors (PEP 8 standard errors)
@@ -78,7 +80,7 @@ select = [
 ignore = []
 
 # Per-file rule exclusions
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 # Ignore numeric magic value rule in test files
 "tests/*" = [
     "PLR2004",

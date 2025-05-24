@@ -109,7 +109,7 @@ class Role(BaseModel):
 
 class CompanyExperience(BaseModel):
     """Model for professional experience at a single company with multiple roles.
-    
+
     This model allows grouping multiple role entries under a single company.
     """
 

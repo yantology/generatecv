@@ -37,7 +37,7 @@ class EducationEntry(BaseModel):
     # Define GPA range constants
     MAX_GPA: ClassVar[float] = 4.0
     MIN_GPA: ClassVar[float] = 0.0
-    
+
     @field_validator("gpa")
     @classmethod
     def validate_gpa(cls, v: float | None) -> float | None:
@@ -325,7 +325,7 @@ def create_sample_cv() -> CVData:
             address="123 Main St, Anytown, AN 12345",
         ),
         summary="Experienced software engineer with a passion for building "
-               "scalable applications.",
+        "scalable applications.",
         experience=[
             ExperienceEntry(
                 company="Tech Solutions Inc.",
@@ -347,7 +347,7 @@ def create_sample_cv() -> CVData:
                 end_date="2019-12",
                 location="Boston, MA",
                 description="Developed front-end and back-end features "
-                            "for SaaS platform.",
+                "for SaaS platform.",
                 achievements=[
                     "Designed and implemented RESTful API",
                     "Reduced page load time by 30%",

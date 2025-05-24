@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 
 
 def test_simple():
@@ -16,7 +15,8 @@ class TestBasicFunctionality:
 
     def test_string_operations(self):
         """Test string operations."""
-        assert "CV" in "Generate CV"
+        text = "Generate CV"
+        assert "CV" in text
         assert "CV".lower() == "cv"
 
 

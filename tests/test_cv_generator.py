@@ -1,6 +1,4 @@
 from pathlib import Path
-from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -11,9 +9,7 @@ from generatecv.cv_generator import (
     CVGenerator,
     CVTemplate,
     EducationEntry,
-    ExperienceEntry,
     PersonalInfo,
-    SkillCategory,
     create_sample_cv,
 )
 
@@ -28,12 +24,12 @@ def sample_cv_data() -> CVData:
 def sample_yaml_file(sample_cv_data: CVData, tmp_path: Path) -> Path:
     """Create a sample YAML file from CV data."""
     yaml_path = tmp_path / "sample_cv.yaml"
-    
+
     # Convert to dict and save as YAML
     cv_dict = sample_cv_data.model_dump()
     with open(yaml_path, "w", encoding="utf-8") as f:
         yaml.dump(cv_dict, f)
-    
+
     return yaml_path
 
 
@@ -114,7 +110,8 @@ class TestCVGenerator:
         self, sample_cv_data: CVData, tmp_path: Path
     ) -> None:
         """Test error when invalid output format is specified."""
-        # We need to use type ignore here because mypy correctly identifies this as an error
+        # We need to use type ignore here because mypy correctly identifies this as an
+        # error
         generator = CVGenerator(output_format="invalid")  # type: ignore
         output_path = tmp_path / "output.txt"
 
@@ -126,16 +123,16 @@ class TestCVDataValidation:
     """Test validation of CV data structures."""
 
     def test_personal_info_validation(self) -> None:
-            """Test validation of PersonalInfo."""
-            # Valid
-            info = PersonalInfo(
-                name="John Doe", email="john@example.com", phone="+1234567890"
-            )
-            assert info.name == "John Doe"
+        """Test validation of PersonalInfo."""
+        # Valid
+        info = PersonalInfo(
+            name="John Doe", email="john@example.com", phone="+1234567890"
+        )
+        assert info.name == "John Doe"
 
-            # Invalid email
-            with pytest.raises(ValidationError):
-                PersonalInfo(name="John Doe", email="invalid-email", phone="+1234567890")
+        # Invalid email
+        with pytest.raises(ValidationError):
+            PersonalInfo(name="John Doe", email="invalid-email", phone="+1234567890")
 
     def test_education_entry_validation(self) -> None:
         """Test validation of EducationEntry."""

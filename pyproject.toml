@@ -11,6 +11,7 @@ dependencies = [
     "pyyaml>=6.0.2",      # YAML parsing and writing
     "reportlab>=4.4.1",   # PDF generation library
     "setuptools>=80.8.0",
+    "email-validator>=2.0.0",  # Required for Pydantic email validation
 ]
 
 # Command-line scripts provided by the package
@@ -104,4 +105,5 @@ dev = [
     "types-setuptools>=80.8.0",        # Type stubs for setuptools
     "types-reportlab>=4.0.0.20240331", # Type stubs for reportlab
     "types-PyYAML>=6.0.12.12",         # Type stubs for PyYAML
+    "email-validator>=2.0.0",          # Required for Pydantic email validation
 ]

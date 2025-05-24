@@ -17,6 +17,7 @@ setup(
         "pydantic>=2.11.5",
         "pyyaml>=6.0.2",
         "reportlab>=4.4.1",
+        "email-validator>=2.0.0",
     ],
     entry_points={
         "console_scripts": [
@@ -33,6 +34,7 @@ setup(
             "types-PyYAML>=6.0.12.12",
             "types-setuptools>=80.8.0",
             "types-reportlab>=4.0.0.20240331",
+            "email-validator>=2.0.0",
         ],
     },
     classifiers=[

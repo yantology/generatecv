@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import pytest
 
 
-def test_simple():
+def test_simple() -> None:
     """A simple test to verify pytest is working."""
     assert True
 
@@ -9,11 +11,11 @@ def test_simple():
 class TestBasicFunctionality:
     """Group of tests for basic functionality."""
 
-    def test_addition(self):
+    def test_addition(self) -> None:
         """Test simple addition."""
         assert 1 + 1 == 2
 
-    def test_string_operations(self):
+    def test_string_operations(self) -> None:
         """Test string operations."""
         text = "Generate CV"
         assert "CV" in text
@@ -21,7 +23,7 @@ class TestBasicFunctionality:
 
 
 @pytest.fixture
-def sample_data():
+def sample_data() -> dict:
     """Fixture providing sample data for testing."""
     return {
         "personal_info": {
@@ -49,7 +51,7 @@ def sample_data():
     }
 
 
-def test_with_fixture(sample_data):
+def test_with_fixture(sample_data: dict) -> None:
     """Test using the sample data fixture."""
     assert "name" in sample_data["personal_info"]
     assert len(sample_data["education"]) == 1
@@ -64,12 +66,12 @@ def test_with_fixture(sample_data):
         ([1, 2, 3], [1, 2, 3]),
     ],
 )
-def test_parametrized(input_value, expected):
+def test_parametrized(input_value: object, expected: object) -> None:
     """Demonstrate parameterized testing."""
     assert input_value == expected
 
 
-def test_temporary_file(tmp_path):
+def test_temporary_file(tmp_path: Path) -> None:
     """Test using pytest's tmp_path fixture."""
     temp_file = tmp_path / "test.txt"
     temp_file.write_text("Test content")

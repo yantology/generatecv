@@ -1,8 +1,9 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*' # Trigger on tags like v1.2.3, v0.1.0, etc.
   workflow_dispatch:
     inputs:
       test_pypi:
@@ -50,7 +51,9 @@ jobs:
 
   publish-to-pypi:
     name: Publish to PyPI
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.test_pypi)
+    # Run if it's a tag push (event_name == 'push' and ref starts with 'refs/tags/v')
+    # OR if it's a workflow_dispatch and not for test_pypi
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && !inputs.test_pypi)
     needs: build
     runs-on: ubuntu-latest
     environment:

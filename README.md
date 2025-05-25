@@ -1,5 +1,13 @@
 # generatecv
 
+[![CI](https://github.com/yantology/generatecv/workflows/Python%20CI/badge.svg)](https://github.com/yantology/generatecv/actions/workflows/python-ci.yml)
+[![Security](https://github.com/yantology/generatecv/workflows/Security%20Scan/badge.svg)](https://github.com/yantology/generatecv/actions/workflows/security.yml)
+[![Documentation](https://github.com/yantology/generatecv/workflows/Documentation/badge.svg)](https://github.com/yantology/generatecv/actions/workflows/docs.yml)
+[![codecov](https://codecov.io/gh/yantology/generatecv/branch/main/graph/badge.svg)](https://codecov.io/gh/yantology/generatecv)
+[![PyPI version](https://badge.fury.io/py/generatecv.svg)](https://badge.fury.io/py/generatecv)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A Python package for generating professional CVs from structured data.
 
 ## Installation

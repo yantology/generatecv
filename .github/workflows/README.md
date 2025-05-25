@@ -1,8 +1,8 @@
 # GitHub Actions Workflows
 
-This directory contains GitHub Actions workflows for automated testing and code quality checks.
+This directory contains comprehensive GitHub Actions workflows for automated testing, security, publishing, and documentation for the generatecv library.
 
-## Current Workflow
+## 🔄 Current Workflows
 
 ### 🧪 `python-ci.yml` - Continuous Integration
 
@@ -13,10 +13,10 @@ This directory contains GitHub Actions workflows for automated testing and code 
 
 **What it does:**
 
-1. **Environment Setup:**
-   - Sets up Python 3.13
-   - Installs project dependencies and dev tools
-   - Configures pip cache for faster builds
+1. **Multi-Platform Testing:**
+   - Tests on Ubuntu, Windows, and macOS
+   - Python 3.13 support
+   - Full dependency installation with UV
 
 2. **Code Quality Checks:**
    - **Linting**: Runs Ruff to check code style and common issues
@@ -24,194 +24,299 @@ This directory contains GitHub Actions workflows for automated testing and code 
    - **Type Checking**: Performs static type analysis with pyrefly
    - **Testing**: Executes test suite with pytest and generates coverage reports
 
-3. **Coverage Reporting:**
+3. **Package Verification:**
+   - Builds the package and verifies metadata
+   - Tests package installation
+   - Uploads build artifacts for inspection
+
+4. **Coverage Reporting:**
    - Uploads coverage data to Codecov for tracking test coverage over time
 
-4. **Auto-Tagging (main branch only):**
+5. **Auto-Tagging & Releases:**
    - Extracts version from `pyproject.toml`
    - Compares with latest Git tag
-   - Creates new tag if version is newer
+   - Creates new tag and GitHub Release if version is newer
    - **Note**: This only runs on push to `main` branch, NOT on pull requests
 
-## Setup Instructions
+### 🔒 `security.yml` - Security Scanning
 
-### 1. Basic Repository Setup
+**Triggers:**
+- Push to `main` branch
+- Pull requests to `main` branch
+- Scheduled: Every 3 days at 12:00 UTC
+- Manual dispatch
 
-The CI workflow will run automatically on pushes and PRs. No additional setup is required for basic functionality.
+**What it does:**
 
-### 2. Codecov Integration (Optional)
+1. **Vulnerability Scanning:**
+   - Uses Safety to check for known CVEs in dependencies
+   - Scans all installed packages for security issues
+   - Reports vulnerable packages with fix recommendations
 
-To see coverage reports and trends:
+2. **Code Security Analysis:**
+   - Uses Bandit to analyze source code for security issues
+   - Detects common security anti-patterns and vulnerabilities
+   - Checks for hardcoded secrets, SQL injection risks, etc.
 
-1. Sign up for a free account at [codecov.io](https://codecov.io/)
-2. Connect your GitHub repository to Codecov
-3. Coverage reports will be automatically uploaded after each CI run
+3. **Automated Reporting:**
+   - Creates detailed security reports in Markdown format
+   - Uploads reports as GitHub Actions artifacts
+   - Automatically creates GitHub Issues when vulnerabilities found
+   - Saves historical reports to repository (main branch only)
 
-### 3. Local Development
+4. **Issue Management:**
+   - Closes previous security issues when creating new ones
+   - Labels issues appropriately (security-scan, high-priority, etc.)
+   - Provides detailed remediation guidance
 
-To run the same checks locally before pushing:
+### 🚀 `publish.yml` - PyPI Publishing
+
+**Triggers:**
+- GitHub Releases (published)
+- Manual dispatch (with TestPyPI option)
+
+**What it does:**
+
+1. **Package Building:**
+   - Builds wheel and source distributions
+   - Validates package metadata with twine
+   - Runs tests before publishing to ensure quality
+
+2. **PyPI Publishing (OIDC):**
+   - Uses OpenID Connect trusted publishing (no tokens required!)
+   - Publishes to PyPI automatically on GitHub Release
+   - Environment protection with required reviewers
+
+3. **TestPyPI Support:**
+   - Manual workflow dispatch option for testing
+   - Separate environment configuration for test publishing
+   - Safe testing before production releases
+
+4. **Artifact Management:**
+   - Uploads build artifacts for inspection
+   - Maintains build history and audit trail
+
+### 📚 `docs.yml` - Documentation
+
+**Triggers:**
+- Push to `main` branch
+- Pull requests to `main` branch
+- Manual dispatch
+
+**What it does:**
+
+1. **Documentation Generation:**
+   - Uses MkDocs with Material theme for modern documentation
+   - Auto-generates API documentation from docstrings
+   - Creates comprehensive documentation structure
+
+2. **Content Creation:**
+   - Auto-generates documentation files if missing
+   - Includes getting started guides, examples, and API reference
+   - Maintains consistent documentation structure
+
+3. **GitHub Pages Deployment:**
+   - Automatically deploys to GitHub Pages on main branch
+   - Available at: `https://yantology.github.io/generatecv`
+   - Uploads documentation artifacts for review
+
+### 🏷️ `auto-label.yml` - Issue & PR Labeling
+
+**Triggers:**
+- New issues opened
+- New pull requests opened
+
+**What it does:**
+
+1. **Smart Issue Labeling:**
+   - Analyzes issue titles and content
+   - Auto-applies relevant labels (bug, enhancement, security, etc.)
+   - Adds triage label for manual review
+
+2. **PR Size Detection:**
+   - Calculates PR size based on line changes
+   - Applies size labels (XS, S, M, L, XL)
+   - Helps with review prioritization
+
+3. **Type Classification:**
+   - Detects PR types (feature, bugfix, docs, etc.)
+   - Identifies breaking changes
+   - Labels dependency updates and CI changes
+
+## 📋 Dependency Management
+
+### `dependabot.yml` - Automated Updates
+
+**Schedule:** Weekly on Mondays
+
+**What it manages:**
+
+1. **Python Dependencies:**
+   - Monitors `pyproject.toml` for outdated packages
+   - Creates PRs for security updates and version bumps
+   - Includes both production and development dependencies
+
+2. **GitHub Actions:**
+   - Keeps workflow actions up to date
+   - Ensures security patches for CI/CD tools
+   - Maintains compatibility with latest features
+
+## 🔧 Setup Instructions
+
+### 1. PyPI Publishing Setup (OIDC)
+
+**No tokens required!** Modern trusted publishing with OpenID Connect.
+
+1. **PyPI Configuration:**
+   - Go to [PyPI Publishing Settings](https://pypi.org/manage/account/publishing/)
+   - Add new trusted publisher:
+     - Project: `generatecv`
+     - Owner: `yantology`
+     - Repository: `generatecv`
+     - Workflow: `publish.yml`
+     - Environment: `pypi`
+
+2. **GitHub Environments:**
+   - Create `pypi` environment in repository settings
+   - Add protection rules (require reviewers, restrict to main branch)
+   - Optional: Create `testpypi` environment for testing
+
+### 2. Documentation Setup
+
+1. **Enable GitHub Pages:**
+   - Repository Settings → Pages
+   - Source: Deploy from branch
+   - Branch: `gh-pages` (auto-created)
+
+2. **Documentation will be available at:**
+   - `https://yantology.github.io/generatecv`
+
+### 3. Security Integration
+
+1. **Codecov (Optional):**
+   - Sign up at [codecov.io](https://codecov.io/)
+   - Connect repository
+   - Add `CODECOV_TOKEN` to repository secrets
+
+### 4. Labels Setup
+
+The auto-labeling workflow expects these labels to exist:
+
+**Priority:** `high-priority`, `medium-priority`, `low-priority`
+**Security:** `security-scan`, `security-alert`, `needs-triage`
+**Size:** `size/XS`, `size/S`, `size/M`, `size/L`, `size/XL`
+**Type:** `bug`, `enhancement`, `documentation`, `tests`, `dependencies`
+**Special:** `automated`, `breaking-change`, `github-actions`
+
+## 🎯 Development Workflow
+
+### Local Development
 
 ```bash
 # Install dependencies
-pip install -e .[dev]
+uv sync --dev --group docs --group security
 
-# Run linting
-ruff check .
+# Run quality checks locally
+uv run ruff check .
+uv run black --check .
+uv run pyrefly check
+uv run pytest --cov=generatecv
 
-# Check formatting
-black --check .
+# Run security scans
+uv run bandit -r src/
+uv run safety check
 
-# Run type checking
-pyrefly check
+# Build documentation
+uv run mkdocs serve  # Local preview
+uv run mkdocs build  # Build static site
 
-# Run tests with coverage
-pytest --cov=generatecv
+# Build package
+uv build
+uv run twine check dist/*
 ```
 
-### Understanding the CI Process
+### Release Process
 
-### Workflow Stages
+1. **Update version** in `pyproject.toml`
+2. **Commit and push** to main branch
+3. **Create GitHub Release:**
+   - Tag: `v{version}` (matching pyproject.toml)
+   - Auto-generate release notes
+   - Publish release
+4. **Automated publishing** to PyPI follows
+
+## 📊 Workflow Architecture
 
 ```mermaid
 graph TD
-    A[Code Push/PR] --> B[Setup Python 3.13]
-    B --> C[Install Dependencies]
-    C --> D[Lint with Ruff]
-    D --> E[Check Formatting with Black]
-    E --> F[Type Check with pyrefly]
-    F --> G[Run Tests with pytest]
-    G --> H[Generate Coverage Report]
-    H --> I[Upload to Codecov]
-    I --> J{All Checks Pass?}
-    J -->|No| L[❌ CI Failed]
-    J -->|Yes| M{Push to main?}
-    M -->|No (PR)| K[✅ CI Success]
-    M -->|Yes| N[Check Version in pyproject.toml]
-    N --> O{Version > Latest Tag?}
-    O -->|No| P[Skip Tagging]
-    O -->|Yes| Q[Create & Push Tag]
-    Q --> K
-    P --> K
+    A[Code Push/PR] --> B[Multi-Platform CI]
+    A --> C[Security Scan]
+    A --> D[Documentation Build]
+    
+    B --> E[Code Quality Checks]
+    B --> F[Package Build & Test]
+    B --> G{Main Branch?}
+    
+    G -->|Yes| H[Auto-Tag & Release]
+    H --> I[GitHub Release Created]
+    I --> J[PyPI Publishing]
+    
+    C --> K[Vulnerability Reports]
+    K --> L{Issues Found?}
+    L -->|Yes| M[Create GitHub Issue]
+    
+    D --> N[GitHub Pages Deploy]
+    
+    O[Weekly Schedule] --> P[Dependabot Updates]
+    Q[Issue/PR Created] --> R[Auto-Labeling]
 ```
 
-### What Each Tool Does
+## 🔍 Monitoring & Maintenance
 
-- **Ruff**: Fast Python linter that checks for code style, common bugs, and best practices
-- **Black**: Automatic code formatter that ensures consistent code style
-- **pyrefly**: Static type checker that catches type-related errors
-- **pytest**: Test runner that executes your test suite and measures code coverage
+### Workflow Health
 
-## Troubleshooting Common Issues
+- **CI Success Rate**: Monitor Actions tab for failed runs
+- **Security Alerts**: Check Issues tab for security-scan labels
+- **Dependency Updates**: Review Dependabot PRs weekly
+- **Documentation**: Verify GitHub Pages deployment
 
-### CI Fails on Linting
-```bash
-# Fix automatically where possible
-uv run ruff check --fix .
+### Performance Metrics
 
-# Check what needs manual fixing
-uv run ruff check .
-```
+- **Build Times**: Track CI duration for performance regressions
+- **Test Coverage**: Monitor coverage trends in Codecov
+- **Security Posture**: Review security scan frequency and findings
+- **Release Cadence**: Track release frequency and automation success
 
-### CI Fails on Formatting
-```bash
-# Auto-format code
-uv run black .
+## 🚨 Troubleshooting
 
-# Check what would be changed
-uv run black --check --diff .
-```
+### Common Issues
 
-### CI Fails on Type Checking
-```bash
-# Run type checker locally
-uv run pyrefly check
+1. **PyPI Publishing Fails:**
+   - Verify environment configuration matches PyPI trusted publisher
+   - Check version in pyproject.toml is newer than last published
+   - Ensure GitHub Release triggers the workflow
 
-# Check specific files
-uv run pyrefly check src/generatecv/
-```
+2. **Security Scans Create False Positives:**
+   - Review Bandit configuration in pyproject.toml
+   - Update Security dependencies if needed
+   - Adjust scan sensitivity if required
 
-### CI Fails on Tests
-```bash
-# Run tests locally
-uv run pytest
+3. **Documentation Build Fails:**
+   - Check MkDocs configuration syntax
+   - Verify all referenced files exist
+   - Review Python import errors in documentation
 
-# Run with verbose output
-uv run pytest -v
+4. **Multi-Platform Tests Fail:**
+   - Check platform-specific code behavior
+   - Review file path handling differences
+   - Verify dependency compatibility across platforms
 
-# Run specific test
-uv run pytest tests/test_specific.py
-```
+### Getting Help
 
-## Auto-Tagging Explained
+- Create an issue with the `question` label for workflow-related questions
+- Check the Actions tab for detailed failure logs
+- Review individual workflow run outputs for specific error messages
 
-### How Auto-Tagging Works
+---
 
-1. **Trigger**: Only runs when code is pushed to `main` branch (not on PRs)
-2. **Version Check**: Reads version from `pyproject.toml`
-3. **Comparison**: Compares with latest Git tag
-4. **Tag Creation**: Creates new tag only if version is newer
-
-### Example Scenarios
-
-**Scenario 1: Version Bump**
-```
-Latest tag: v0.0.0
-pyproject.toml version: 0.0.1
-Result: ✅ Creates tag v0.0.1
-```
-
-**Scenario 2: No Version Change**
-```
-Latest tag: v0.0.1
-pyproject.toml version: 0.0.1
-Result: ⚠️ Skips tagging (same version)
-```
-
-**Scenario 3: Pull Request**
-```
-Event: Pull request to main
-Result: 🚫 Auto-tag job doesn't run (PR only runs tests)
-```
-
-### Why No PR for Auto-Tag?
-
-Auto-tagging happens **after** your code is already merged to main:
-
-1. You create a PR with version bump
-2. CI runs tests on the PR (no tagging)
-3. PR gets merged to main
-4. CI runs again on main branch
-5. Auto-tag job creates the tag
-
-## Best Practices
-
-### Before Committing
-1. Run tests locally: `uv run pytest`
-2. Check formatting: `uv run black --check .`
-3. Run linter: `uv run ruff check .`
-4. Verify types: `uv run pyrefly check`
-
-### Pull Request Guidelines
-- Ensure all CI checks pass
-- Maintain or improve test coverage
-- Write clear commit messages
-- Keep changes focused and atomic
-
-### Version Management
-- Update version in `pyproject.toml` when ready to release
-- Use semantic versioning (MAJOR.MINOR.PATCH)
-- Only merge version bumps when ready to tag
-
-### Code Quality Standards
-- Follow PEP 8 style guidelines (enforced by Black and Ruff)
-- Add type hints to new code (checked by pyrefly)
-- Write tests for new functionality
-- Aim for high test coverage (visible in Codecov reports)
-
-## Monitoring CI Health
-
-- **Status**: Check the Actions tab in GitHub for recent CI runs
-- **Coverage**: Review coverage trends in Codecov dashboard
-- **Performance**: Monitor CI run times to catch performance regressions
-
-The CI workflow helps maintain code quality and catches issues early in the development process. All checks must pass before code can be merged to the main branch.
+The workflow system provides comprehensive automation for development, security, and publishing processes while maintaining high code quality and security standards. All workflows are designed to be maintainable, transparent, and follow GitHub Actions best practices.

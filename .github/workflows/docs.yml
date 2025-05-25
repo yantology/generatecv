@@ -1,0 +1,244 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+    
+    - name: Install dependencies
+      run: |
+        uv sync --dev
+        uv add --dev mkdocs mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
+    
+    - name: Generate API documentation
+      run: |
+        mkdir -p docs/api
+        uv run python -c "
+        import generatecv
+        print('# generatecv API Documentation\\n')
+        print('Auto-generated API documentation for generatecv package.')
+        " > docs/api/index.md
+    
+    - name: Create mkdocs.yml if not exists
+      run: |
+        if [ ! -f mkdocs.yml ]; then
+          cat > mkdocs.yml << 'EOF'
+        site_name: generatecv Documentation
+        site_description: Professional CV/Resume Generator
+        site_url: https://yantology.github.io/generatecv
+        repo_url: https://github.com/yantology/generatecv
+        repo_name: yantology/generatecv
+        
+        theme:
+          name: material
+          palette:
+            - scheme: default
+              primary: blue
+              accent: blue
+              toggle:
+                icon: material/brightness-7
+                name: Switch to dark mode
+            - scheme: slate
+              primary: blue
+              accent: blue
+              toggle:
+                icon: material/brightness-4
+                name: Switch to light mode
+          features:
+            - navigation.tabs
+            - navigation.sections
+            - navigation.expand
+            - navigation.top
+            - search.highlight
+            - search.suggest
+            - content.code.copy
+        
+        nav:
+          - Home: index.md
+          - Getting Started: getting-started.md
+          - API Reference: api/
+          - Examples: examples.md
+          - Contributing: contributing.md
+        
+        plugins:
+          - search
+          - mkdocstrings:
+              handlers:
+                python:
+                  paths: [src]
+                  options:
+                    docstring_style: google
+        
+        markdown_extensions:
+          - admonition
+          - pymdownx.details
+          - pymdownx.superfences
+          - pymdownx.highlight:
+              anchor_linenums: true
+          - pymdownx.inlinehilite
+          - pymdownx.snippets
+          - pymdownx.tabbed:
+              alternate_style: true
+          - tables
+          - toc:
+              permalink: true
+        EOF
+        fi
+    
+    - name: Create documentation files if not exist
+      run: |
+        mkdir -p docs
+        
+        # Create index.md if not exists
+        if [ ! -f docs/index.md ]; then
+          cat > docs/index.md << 'EOF'
+        # generatecv
+        
+        Professional CV/Resume generator for Python.
+        
+        ## Features
+        
+        - Generate professional CVs from structured data
+        - Multiple output formats (PDF, etc.)
+        - Customizable templates
+        - Easy to use Python API
+        
+        ## Quick Start
+        
+        ```bash
+        pip install generatecv
+        ```
+        
+        ```python
+        import generatecv
+        
+        # Your CV generation code here
+        ```
+        
+        ## Documentation
+        
+        - [Getting Started](getting-started.md)
+        - [API Reference](api/)
+        - [Examples](examples.md)
+        EOF
+        fi
+        
+        # Create getting-started.md if not exists
+        if [ ! -f docs/getting-started.md ]; then
+          cat > docs/getting-started.md << 'EOF'
+        # Getting Started
+        
+        This guide will help you get started with generatecv.
+        
+        ## Installation
+        
+        ```bash
+        pip install generatecv
+        ```
+        
+        ## Basic Usage
+        
+        ```python
+        import generatecv
+        
+        # Basic CV generation example
+        # Add your examples here
+        ```
+        
+        ## Next Steps
+        
+        - Check out the [API Reference](api/) for detailed documentation
+        - See [Examples](examples.md) for more use cases
+        EOF
+        fi
+        
+        # Create examples.md if not exists
+        if [ ! -f docs/examples.md ]; then
+          cat > docs/examples.md << 'EOF'
+        # Examples
+        
+        Here are some examples of using generatecv.
+        
+        ## Basic Example
+        
+        ```python
+        import generatecv
+        
+        # Add your examples here
+        ```
+        
+        ## Advanced Examples
+        
+        Coming soon...
+        EOF
+        fi
+        
+        # Create contributing.md if not exists
+        if [ ! -f docs/contributing.md ]; then
+          cat > docs/contributing.md << 'EOF'
+        # Contributing
+        
+        We welcome contributions to generatecv!
+        
+        ## Development Setup
+        
+        ```bash
+        git clone https://github.com/yantology/generatecv.git
+        cd generatecv
+        uv sync --dev
+        ```
+        
+        ## Running Tests
+        
+        ```bash
+        uv run pytest
+        ```
+        
+        ## Code Quality
+        
+        ```bash
+        uv run ruff check .
+        uv run black --check .
+        uv run pyrefly check
+        ```
+        EOF
+        fi
+    
+    - name: Build documentation
+      run: |
+        uv run mkdocs build --strict
+    
+    - name: Upload documentation artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: site/
+        retention-days: 7
+    
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Deploy documentation: ${{ github.sha }}'

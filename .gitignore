@@ -62,4 +62,3 @@ dmypy.json
 .env.production.local
 
 # Package managers
-uv.lock

@@ -1,7 +1,7 @@
 # Main project metadata
 [project]
 name = "generatecv"
-version = "0.1.0"
+version = "0.0.1"
 description = "generatecv is a Python package for generating professional CVs (resumes) from structured data."
 readme = "README.md"
 authors = [{ name = "yantology", email = "work@yantology.dev" }]

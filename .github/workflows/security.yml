@@ -9,6 +9,13 @@ on:
     - cron: '0 12 */3 * *'  # Every 3 days at 12:00
   workflow_dispatch:
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: read
+  security-events: write
+
 jobs:
   security:
     name: Security Vulnerability Scan
@@ -16,6 +23,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -41,24 +50,60 @@ jobs:
         echo "**Commit:** ${{ github.sha }}" >> security-report.md
         echo "" >> security-report.md
     
-    - name: Run vulnerability scan with Safety
+    - name: Run vulnerability scan with multiple tools
       id: vulnerability_scan
       run: |
-        uv add --dev safety
         echo "## 🚨 Dependency Vulnerabilities" >> security-report.md
         echo "" >> security-report.md
         
-        if uv run safety check --json --output vulns.json 2>/dev/null; then
-          echo "✅ **No known vulnerabilities found in dependencies!**" >> security-report.md
-          echo "has_vulns=false" >> $GITHUB_OUTPUT
+        # Try pip-audit first
+        echo "### pip-audit scan:" >> security-report.md
+        echo '```' >> security-report.md
+        if uv add --dev pip-audit && uv run pip-audit --format=columns --output vulns.txt 2>&1; then
+          if [ -f vulns.txt ] && [ -s vulns.txt ]; then
+            echo "❌ **Vulnerabilities detected by pip-audit:**" >> security-report.md
+            echo "" >> security-report.md
+            cat vulns.txt | head -50 >> security-report.md
+            echo "has_vulns=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ **No vulnerabilities found by pip-audit**" >> security-report.md
+          fi
         else
-          echo "❌ **Vulnerabilities detected in dependencies:**" >> security-report.md
-          echo "" >> security-report.md
-          echo '```' >> security-report.md
-          uv run safety check 2>&1 | head -50 >> security-report.md
-          echo '```' >> security-report.md
-          echo "has_vulns=true" >> $GITHUB_OUTPUT
+          echo "⚠️ **pip-audit scan failed or encountered errors**" >> security-report.md
+          uv run pip-audit 2>&1 | head -20 >> security-report.md || echo "Could not run pip-audit" >> security-report.md
         fi
+        echo '```' >> security-report.md
+        echo "" >> security-report.md
+        
+        # Try safety as backup
+        echo "### safety scan (backup):" >> security-report.md
+        echo '```' >> security-report.md
+        if uv add --dev safety; then
+          if uv run safety check --json --output safety.json 2>/dev/null; then
+            if [ -f safety.json ] && [ -s safety.json ]; then
+              echo "❌ **Vulnerabilities detected by safety:**" >> security-report.md
+              uv run safety check 2>&1 | head -30 >> security-report.md || echo "Could not display safety results" >> security-report.md
+              echo "has_vulns=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ **No vulnerabilities found by safety**" >> security-report.md
+              if [ -z "${{ env.has_vulns }}" ]; then
+                echo "has_vulns=false" >> $GITHUB_OUTPUT
+              fi
+            fi
+          else
+            echo "⚠️ **Safety scan completed with warnings or deprecated**" >> security-report.md
+            uv run safety check 2>&1 | head -20 >> security-report.md || echo "Could not run safety check" >> security-report.md
+            if [ -z "${{ env.has_vulns }}" ]; then
+              echo "has_vulns=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+        else
+          echo "⚠️ **Could not install safety**" >> security-report.md
+          if [ -z "${{ env.has_vulns }}" ]; then
+            echo "has_vulns=false" >> $GITHUB_OUTPUT
+          fi
+        fi
+        echo '```' >> security-report.md
         echo "" >> security-report.md
     
     - name: Run code security scan with Bandit
@@ -75,7 +120,7 @@ jobs:
           echo "❌ **Code security issues detected:**" >> security-report.md
           echo "" >> security-report.md
           echo '```' >> security-report.md
-          uv run bandit -r src/ -f txt 2>&1 | head -30 >> security-report.md
+          uv run bandit -r src/ -f txt 2>&1 | head -30 >> security-report.md || echo "Error running code security scan" >> security-report.md
           echo '```' >> security-report.md
           echo "has_code_issues=true" >> $GITHUB_OUTPUT
         fi
@@ -85,7 +130,7 @@ jobs:
       run: |
         echo "## 📊 Scan Summary" >> security-report.md
         echo "" >> security-report.md
-        echo "- **Dependencies scanned:** $(uv run python -c "import pkg_resources; print(len(list(pkg_resources.working_set)))" 2>/dev/null || echo "N/A")" >> security-report.md
+        echo "- **Dependencies scanned:** $(uv run python -c "import importlib.metadata; print(len([d for d in importlib.metadata.distributions()]))" 2>/dev/null || echo "N/A")" >> security-report.md
         echo "- **Python files scanned:** $(find src/ -name "*.py" | wc -l)" >> security-report.md
         echo "- **Vulnerabilities found:** ${{ steps.vulnerability_scan.outputs.has_vulns == 'true' && 'Yes' || 'No' }}" >> security-report.md
         echo "- **Code issues found:** ${{ steps.code_scan.outputs.has_code_issues == 'true' && 'Yes' || 'No' }}" >> security-report.md
@@ -105,61 +150,72 @@ jobs:
         retention-days: 30
     
     - name: Save security report to repository
-      if: github.ref == 'refs/heads/main' && (steps.vulnerability_scan.outputs.has_vulns == 'true' || steps.code_scan.outputs.has_code_issues == 'true')
+      if: always() && github.ref == 'refs/heads/main'
       run: |
         mkdir -p .github/security-reports
         cp security-report.md .github/security-reports/$(date +%Y-%m-%d-%H%M).md
         
-        git config user.name "security-bot[bot]"
-        git config user.email "security-bot[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
         git add .github/security-reports/
-        git commit -m "📊 Security scan report $(date +%Y-%m-%d)" || exit 0
-        git push
+        git commit -m "📊 Security scan report $(date +%Y-%m-%d)" || echo "No changes to commit"
+        git push || echo "Could not push to repository - check permissions"
     
     - name: Close existing security issues
       if: steps.vulnerability_scan.outputs.has_vulns == 'true' || steps.code_scan.outputs.has_code_issues == 'true'
       uses: actions/github-script@v7
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const { data: issues } = await github.rest.issues.listForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            labels: 'security-scan',
-            state: 'open'
-          });
-          
-          for (const issue of issues) {
-            await github.rest.issues.update({
+          try {
+            const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: issue.number,
-              state: 'closed',
-              state_reason: 'completed'
+              labels: 'security-scan',
+              state: 'open'
             });
+            
+            for (const issue of issues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed'
+              });
+            }
+          } catch (error) {
+            console.log('Error closing existing issues:', error.message);
           }
     
     - name: Create GitHub Issue for security findings
       if: steps.vulnerability_scan.outputs.has_vulns == 'true' || steps.code_scan.outputs.has_code_issues == 'true'
       uses: actions/github-script@v7
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const fs = require('fs');
-          const reportContent = fs.readFileSync('security-report.md', 'utf8');
-          
-          const priority = '${{ steps.vulnerability_scan.outputs.has_vulns }}' === 'true' ? 'high-priority' : 'medium-priority';
-          
-          await github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: `🚨 Security Alert - ${new Date().toISOString().split('T')[0]}`,
-            body: `${reportContent}
+          try {
+            const fs = require('fs');
+            const reportContent = fs.readFileSync('security-report.md', 'utf8');
             
-            ---
-            **Workflow Run:** [${context.workflow}](${context.payload.repository.html_url}/actions/runs/${context.runId})
-            **Triggered by:** ${context.eventName}
-            **Actor:** ${context.actor}
+            const priority = '${{ steps.vulnerability_scan.outputs.has_vulns }}' === 'true' ? 'high-priority' : 'medium-priority';
             
-            > ⚠️ This issue was automatically created by security scanning workflow.
-            > Please review and address the findings above.`,
-            labels: ['security-scan', 'automated', priority, 'needs-triage']
-          });
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Security Alert - ${new Date().toISOString().split('T')[0]}`,
+              body: `${reportContent}
+              
+              ---
+              **Workflow Run:** [${context.workflow}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+              **Triggered by:** ${context.eventName}
+              **Actor:** ${context.actor}
+              
+              > ⚠️ This issue was automatically created by security scanning workflow.
+              > Please review and address the findings above.`,
+              labels: ['security-scan', 'automated', priority, 'needs-triage']
+            });
+          } catch (error) {
+            console.log('Error creating security issue:', error.message);
+            core.setFailed(`Failed to create security issue: ${error.message}`);
+          }

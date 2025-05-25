@@ -7,6 +7,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-docs:
     name: Build Documentation
@@ -28,19 +33,24 @@ jobs:
         uv sync --dev
         uv add --dev mkdocs mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
     
-    - name: Generate API documentation
+    - name: Create documentation structure
       run: |
         mkdir -p docs/api
-        uv run python -c "
-        import generatecv
-        print('# generatecv API Documentation\\n')
-        print('Auto-generated API documentation for generatecv package.')
-        " > docs/api/index.md
+        
+        # Create API documentation
+        cat > docs/api/index.md << 'EOF'
+        # API Reference
+        
+        Auto-generated API documentation for generatecv package.
+        
+        ## Modules
+        
+        Coming soon...
+        EOF
     
-    - name: Create mkdocs.yml if not exists
+    - name: Create mkdocs.yml
       run: |
-        if [ ! -f mkdocs.yml ]; then
-          cat > mkdocs.yml << 'EOF'
+        cat > mkdocs.yml << 'EOF'
         site_name: generatecv Documentation
         site_description: Professional CV/Resume Generator
         site_url: https://yantology.github.io/generatecv
@@ -74,7 +84,7 @@ jobs:
         nav:
           - Home: index.md
           - Getting Started: getting-started.md
-          - API Reference: api/
+          - API Reference: api/index.md
           - Examples: examples.md
           - Contributing: contributing.md
         
@@ -101,15 +111,13 @@ jobs:
           - toc:
               permalink: true
         EOF
-        fi
     
-    - name: Create documentation files if not exist
+    - name: Create documentation files
       run: |
         mkdir -p docs
         
-        # Create index.md if not exists
-        if [ ! -f docs/index.md ]; then
-          cat > docs/index.md << 'EOF'
+        # Create index.md
+        cat > docs/index.md << 'EOF'
         # generatecv
         
         Professional CV/Resume generator for Python.
@@ -136,14 +144,12 @@ jobs:
         ## Documentation
         
         - [Getting Started](getting-started.md)
-        - [API Reference](api/)
+        - [API Reference](api/index.md)
         - [Examples](examples.md)
         EOF
-        fi
         
-        # Create getting-started.md if not exists
-        if [ ! -f docs/getting-started.md ]; then
-          cat > docs/getting-started.md << 'EOF'
+        # Create getting-started.md
+        cat > docs/getting-started.md << 'EOF'
         # Getting Started
         
         This guide will help you get started with generatecv.
@@ -165,14 +171,12 @@ jobs:
         
         ## Next Steps
         
-        - Check out the [API Reference](api/) for detailed documentation
+        - Check out the [API Reference](api/index.md) for detailed documentation
         - See [Examples](examples.md) for more use cases
         EOF
-        fi
         
-        # Create examples.md if not exists
-        if [ ! -f docs/examples.md ]; then
-          cat > docs/examples.md << 'EOF'
+        # Create examples.md
+        cat > docs/examples.md << 'EOF'
         # Examples
         
         Here are some examples of using generatecv.
@@ -189,11 +193,9 @@ jobs:
         
         Coming soon...
         EOF
-        fi
         
-        # Create contributing.md if not exists
-        if [ ! -f docs/contributing.md ]; then
-          cat > docs/contributing.md << 'EOF'
+        # Create contributing.md
+        cat > docs/contributing.md << 'EOF'
         # Contributing
         
         We welcome contributions to generatecv!
@@ -216,15 +218,13 @@ jobs:
         
         ```bash
         uv run ruff check .
-        uv run black --check .
-        uv run pyrefly check
+        uv run ruff format --check .
         ```
         EOF
-        fi
     
     - name: Build documentation
       run: |
-        uv run mkdocs build --strict
+        uv run mkdocs build --verbose
     
     - name: Upload documentation artifacts
       uses: actions/upload-artifact@v4

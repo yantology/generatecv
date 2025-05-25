@@ -41,14 +41,14 @@ generator.generate(cv_data, "my_cv.pdf")
 
 ### Type Checking
 
-This project uses `mypy` for static type checking:
+This project uses `pyrefly` for static type checking:
 
 ```bash
 # Run type checking
-mypy src
+pyrefly check
 
-# For stricter type checking
-mypy --strict src
+# Suppress errors temporarily during migration
+pyrefly check --suppress-errors
 ```
 
 ### Testing

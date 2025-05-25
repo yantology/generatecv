@@ -37,9 +37,9 @@ jobs:
       run: |
         black --check .
     
-    - name: Type check with mypy
+    - name: Type check with pyrefly
       run: |
-        mypy .
+        pyrefly check
     
     - name: Test with pytest and coverage
       run: |

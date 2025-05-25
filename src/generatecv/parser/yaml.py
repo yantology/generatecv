@@ -47,7 +47,7 @@ def validate_cv_data(data: dict[str, Any]) -> CV:
     """Validates that the CV data is properly structured using Pydantic models.
 
     Args:
-        data: Dictionary containing CV data
+        data: Dictionary containing CV data from YAML
 
     Returns:
         CV object if data is valid, or a list of validation errors if invalid

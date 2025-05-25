@@ -82,9 +82,18 @@ jobs:
       id: get_latest_tag
       run: |
         # Get the latest tag, or set to 0.0.0 if no tags exist
-        LATEST_TAG=$(git tag --sort=-version:refname | head -n1 || echo "0.0.0")
+        set +e  # Don't exit on error
+        LATEST_TAG=$(git tag -l --sort=-version:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+        set -e  # Re-enable exit on error
+        
+        if [ -z "$LATEST_TAG" ]; then
+          LATEST_TAG="0.0.0"
+          echo "No existing tags found, using default: $LATEST_TAG"
+        else
+          echo "Found latest tag: $LATEST_TAG"
+        fi
+        
         echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-        echo "Latest tag: $LATEST_TAG"
     
     - name: Compare versions
       id: compare_versions
@@ -92,13 +101,35 @@ jobs:
         CURRENT_VERSION=${{ steps.get_version.outputs.version }}
         LATEST_TAG=${{ steps.get_latest_tag.outputs.latest_tag }}
         
+        echo "Debug: CURRENT_VERSION='$CURRENT_VERSION'"
+        echo "Debug: LATEST_TAG='$LATEST_TAG'"
+        
         # Function to compare semantic versions
         python << EOF
         def version_tuple(v):
-            return tuple(map(int, (v.split("."))))
+            # Handle empty string or None
+            if not v or v.strip() == "":
+                return (0, 0, 0)
+            
+            # Remove 'v' prefix if present
+            v = v.lstrip('v')
+            
+            # Split and convert to integers, pad with zeros if needed
+            parts = v.split(".")
+            while len(parts) < 3:
+                parts.append("0")
+            
+            try:
+                return tuple(int(part) for part in parts[:3])
+            except ValueError:
+                # If conversion fails, treat as 0.0.0
+                return (0, 0, 0)
         
         current = version_tuple("$CURRENT_VERSION")
         latest = version_tuple("$LATEST_TAG")
+        
+        print(f"Current version tuple: {current}")
+        print(f"Latest version tuple: {latest}")
         
         if current > latest:
             print("Version is newer")

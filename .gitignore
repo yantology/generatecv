@@ -65,3 +65,4 @@ dmypy.json
 
 # Documentation build
 site/
+mkdocs.yml

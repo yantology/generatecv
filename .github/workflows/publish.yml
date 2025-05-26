@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: ["Python CI"] # Must match 'name:' of python-ci.yml
     types: [completed]
+    branches: [main]
   workflow_dispatch: # Keep manual trigger
     inputs:
       test_pypi:
@@ -16,6 +17,7 @@ jobs:
   build:
     name: Build Distribution
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     outputs:
       # True if workflow_run from Python CI (main, push, success) AND tag v* found on commit
       should_publish_workflow_run: ${{ steps.tag_info.outputs.tag_exists == 'true' && steps.trigger_check.outputs.is_valid_run_for_publish == 'true' }}

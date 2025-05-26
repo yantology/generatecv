@@ -1,6 +1,13 @@
 ## [unreleased]
 
+### Docs
+
+- Refactor API docs to use mkdocstrings and translate to ID
+
+
 ### Documentation
+
+- Update changelog [skip ci]
 
 - Update changelog [skip ci]
 

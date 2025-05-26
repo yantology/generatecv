@@ -1,7 +1,7 @@
 # Main project metadata
 [project]
 name = "generatecv"
-version = "0.0.9"
+version = "0.0.10"
 description = "generatecv is a Python package for generating professional CVs (resumes) from structured data."
 readme = "README.md"
 license = { text = "MIT" }

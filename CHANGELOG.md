@@ -5,6 +5,13 @@
 - Update changelog [skip ci]
 
 
+## [0.0.12] - 2025-05-26
+
+### Documentation
+
+- Update changelog [skip ci]
+
+
 ## [0.0.11] - 2025-05-26
 
 ### Docs

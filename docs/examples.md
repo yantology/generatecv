@@ -1,390 +1,448 @@
 # Examples
 
-Here are some comprehensive examples of using generatecv to create professional CVs.
+Here are some comprehensive examples of using `generatecv` to create professional CVs in PDF format.
 
-## Basic Example
+## Basic Example (Python Data)
+
+This example shows how to define CV data directly in Python using the Pydantic models and then generate a PDF.
 
 ```python
-import generatecv
+from generatecv.pdf_generator import generatepdf
+from generatecv.models import (
+    CV, PersonalInfo, Education, CompanyExperience, Role, Skill, Project,
+    Certificate, Language, Reference
+)
 
-# Simple CV data
-cv_data = {
-    "personal": {
-        "name": "Jane Smith",
-        "email": "jane.smith@example.com",
-        "phone": "+1 (555) 123-4567",
-        "location": "San Francisco, CA",
-        "linkedin": "linkedin.com/in/janesmith",
-        "github": "github.com/janesmith"
-    },
-    "summary": "Experienced software engineer with 5+ years in full-stack development",
-    "experience": [
-        {
-            "title": "Senior Software Engineer",
-            "company": "Tech Corp",
-            "location": "San Francisco, CA",
-            "duration": "2021 - Present",
-            "description": "Lead development of microservices architecture",
-            "highlights": [
-                "Reduced system latency by 40%",
-                "Led team of 5 engineers",
-                "Implemented CI/CD pipeline"
+# 1. Construct your CV data using Pydantic models
+cv_data = CV(
+    personal_info=PersonalInfo(
+        name="Jane Smith",
+        email="jane.smith@example.com",
+        phone="+1 (555) 123-4567",
+        location="San Francisco, CA",
+        linkedin="https://linkedin.com/in/janesmith",
+        github="https://github.com/janesmith",
+        summary="Experienced software engineer with 5+ years in full-stack development.",
+        title="Senior Software Engineer"
+    ),
+    experience=[
+        CompanyExperience(
+            company="Tech Corp",
+            location="San Francisco, CA",
+            roles=[
+                Role(
+                    title="Senior Software Engineer",
+                    start_date="2021-01",
+                    end_date="Present",
+                    description="Lead development of microservices architecture.",
+                    achievements=[
+                        "Reduced system latency by 40%",
+                        "Led team of 5 engineers",
+                        "Implemented CI/CD pipeline"
+                    ]
+                )
             ]
-        }
+        )
     ],
-    "education": [
-        {
-            "degree": "Bachelor of Science in Computer Science",
-            "institution": "Stanford University",
-            "location": "Stanford, CA",
-            "year": "2019",
-            "gpa": "3.8/4.0"
-        }
+    education=[
+        Education(
+            institution="Stanford University",
+            degree="Bachelor of Science in Computer Science",
+            location="Stanford, CA",
+            start_date="2015-09",
+            end_date="2019-06",
+            gpa="3.8/4.0"
+        )
+    ],
+    skills=[
+        Skill(category="Programming Languages", name="Python, JavaScript, Java"),
+        Skill(category="Frameworks/Tools", name="React, Docker, AWS, Django")
+    ],
+    projects=[
+        Project(
+            name="Open Source Contribution",
+            description="Contributed to a popular open-source library.",
+            technologies=["Python", "Git"],
+            link="https://github.com/janesmith/project-example"
+        )
+    ],
+    languages=[
+        Language(name="English", proficiency="Native"),
+        Language(name="Spanish", proficiency="Conversational")
     ]
-}
+    # You can add certifications, references, publications, awards, interests, custom_sections as needed
+)
 
-# Generate CV
-cv = generatecv.create_cv(cv_data)
-cv.save("jane_smith_cv.pdf")
+# 2. Generate the CV PDF
+try:
+    output_pdf_path = generatepdf(
+        cv_data=cv_data,
+        output_path="jane_smith_cv.pdf",
+        style="classic",  # Currently 'classic' is the main style
+        page_size="A4"    # 'A4' or 'letter'
+    )
+    print(f"CV successfully generated at: {output_pdf_path}")
+except ValueError as e:
+    print(f"Error during PDF generation: {e}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
 ```
 
-## Academic CV Example
+## Generating from a YAML File
+
+`generatecv` can load CV data from a YAML file.
+
+**1. Create your YAML data file (e.g., `my_cv_data.yaml`):**
+
+```yaml
+personal_info:
+  name: "Dr. Michael Chen"
+  email: "m.chen@university.edu"
+  phone: "+1 (555) 987-6543"
+  location: "Boston, MA"
+  website: "http://michaelchen.com" # Ensure HttpUrl validity
+  # orcid: "0000-0000-0000-0000" # Not a standard field in PersonalInfo, use custom_sections or summary
+  summary: "Research scientist specializing in machine learning and computer vision. ORCID: 0000-0000-0000-0000"
+  title: "Research Scientist"
+
+education:
+  - institution: "MIT"
+    degree: "Ph.D. in Computer Science"
+    # field: "Machine Learning" # Not a direct field in Education model, combine with degree or details
+    details: "Field: Machine Learning. Thesis: Deep Learning Approaches for Medical Image Analysis. Advisor: Prof. John Doe"
+    start_date: "2016-09"
+    end_date: "2020-05"
+    location: "Cambridge, MA"
+  - institution: "Stanford University"
+    degree: "M.S. in Computer Science"
+    start_date: "2014-09"
+    end_date: "2016-06"
+
+experience: # This should be a list of CompanyExperience
+  - company: "Harvard Medical School" # This is a CompanyExperience item
+    roles: # It needs a 'roles' list
+      - title: "Postdoctoral Research Associate"
+        start_date: "2020-06"
+        end_date: "Present"
+        description: "Research on AI applications in healthcare."
+
+publications: # This is a list of strings
+  - "Chen, M., Smith, J., Johnson, A. (2021). Deep Learning for Medical Image Segmentation. Nature Machine Intelligence, 3, 123-135."
+
+# grants: # Not a direct field in CV model, use custom_sections
+#   - title: "NIH R01 Grant"
+#     amount: "$500,000"
+#     duration: "2021-2024"
+#     role: "Co-PI"
+custom_sections:
+  grants:
+    - "NIH R01 Grant: $500,000, Duration: 2021-2024, Role: Co-PI"
+
+# ... other sections like skills, projects, etc.
+```
+
+**2. Python script to load YAML and generate PDF:**
 
 ```python
-import generatecv
+from generatecv.pdf_generator import yamltocv, generatepdf
+from generatecv.models import CV # For type hinting
+from pydantic import ValidationError
+import yaml # For yaml.YAMLError
 
-academic_data = {
-    "personal": {
-        "name": "Dr. Michael Chen",
-        "email": "m.chen@university.edu",
-        "phone": "+1 (555) 987-6543",
-        "location": "Boston, MA",
-        "website": "michaelchen.com",
-        "orcid": "0000-0000-0000-0000"
-    },
-    "summary": "Research scientist specializing in machine learning and computer vision",
-    "education": [
-        {
-            "degree": "Ph.D. in Computer Science",
-            "field": "Machine Learning",
-            "institution": "MIT",
-            "location": "Cambridge, MA",
-            "year": "2020",
-            "thesis": "Deep Learning Approaches for Medical Image Analysis",
-            "advisor": "Prof. John Doe"
-        },
-        {
-            "degree": "M.S. in Computer Science",
-            "institution": "Stanford University",
-            "year": "2016"
-        }
+yaml_file = "my_cv_data.yaml" # Path to your YAML file
+output_pdf = "michael_chen_academic_cv.pdf"
+
+try:
+    # Load and validate data from YAML
+    # Note: yamltocv has parameters output_path, style, page_size which are not used.
+    cv_data_from_yaml: CV = yamltocv(yaml_path=yaml_file)
+
+    # Generate PDF using the loaded data
+    generated_path = generatepdf(
+        cv_data=cv_data_from_yaml,
+        output_path=output_pdf,
+        style="classic",
+        page_size="A4"
+    )
+    print(f"Academic CV generated from YAML and saved to: {generated_path}")
+
+except FileNotFoundError:
+    print(f"Error: The YAML file '{yaml_file}' was not found.")
+except yaml.YAMLError as e:
+    print(f"Error: The YAML file '{yaml_file}' is not valid YAML. Details: {e}")
+except ValidationError as ve:
+    print(f"Data validation error in '{yaml_file}': {ve}")
+except ValueError as ve_gen: # For errors from generatepdf (e.g. invalid style)
+    print(f"PDF generation error: {ve_gen}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+```
+
+## Creative Professional Example (using Python data)
+
+This example focuses on a creative professional, showcasing how to structure data for skills and projects.
+
+```python
+from generatecv.pdf_generator import generatepdf
+from generatecv.models import CV, PersonalInfo, CompanyExperience, Role, Skill, Project, Award # Assuming Award model exists or use custom_sections
+
+# Data for a creative professional
+creative_data = CV(
+    personal_info=PersonalInfo(
+        name="Sarah Williams",
+        email="hello@sarahwilliams.design",
+        phone="+1 (555) 456-7890",
+        location="New York, NY",
+        website="http://sarahwilliams.design", # Ensure HttpUrl validity
+        # behance: "behance.net/sarahwilliams", # Use custom_sections or summary
+        # instagram: "@sarahdesigns" # Use custom_sections or summary
+        summary="Award-winning graphic designer with expertise in branding and digital design. Behance: behance.net/sarahwilliams, Instagram: @sarahdesigns",
+        title="Senior Graphic Designer"
+    ),
+    experience=[
+        CompanyExperience(
+            company="Creative Agency Inc.",
+            roles=[
+                Role(
+                    title="Senior Graphic Designer",
+                    start_date="2020-03",
+                    end_date="Present",
+                    description="Lead designer for major brand campaigns.",
+                    achievements=[
+                        "Designed rebrand for Fortune 500 company",
+                        "Won 3 design awards in 2022",
+                        "Managed design team of 4"
+                    ]
+                )
+            ]
+        )
     ],
-    "experience": [
-        {
-            "title": "Postdoctoral Research Associate",
-            "company": "Harvard Medical School",
-            "duration": "2020 - Present",
-            "description": "Research on AI applications in healthcare"
-        }
+    skills=[
+        Skill(category="Design Software", name="Adobe Creative Suite (Photoshop, Illustrator, InDesign), Figma, Sketch"),
+        Skill(category="Specialties", name="Brand Identity, UI/UX Design, Print Design, Motion Graphics")
     ],
-    "publications": [
-        {
-            "title": "Deep Learning for Medical Image Segmentation",
-            "authors": "M. Chen, J. Smith, A. Johnson",
-            "journal": "Nature Machine Intelligence",
-            "year": "2021",
-            "volume": "3",
-            "pages": "123-135"
-        }
+    projects=[ # 'portfolio' can be represented as 'projects'
+        Project(
+            name="Nike Campaign Redesign",
+            description="Complete visual identity overhaul for a major sports brand.",
+            link="http://sarahwilliams.design/nike", # Ensure HttpUrl validity
+            technologies=["Branding", "Adobe Illustrator", "Adobe Photoshop"]
+        ),
+        Project(
+            name="Mobile App UI/UX",
+            description="Designed user interface and experience for a new lifestyle app.",
+            technologies=["Figma", "User Research", "Prototyping"]
+        )
     ],
-    "grants": [
-        {
-            "title": "NIH R01 Grant",
-            "amount": "$500,000",
-            "duration": "2021-2024",
-            "role": "Co-PI"
-        }
+    awards=[ # list of strings
+        "Best Brand Identity Design - Design Awards 2022",
+        "Gold Medal for Digital Illustration - Creative Annual 2021"
     ]
-}
+    # education, certifications, etc. can be added as needed
+)
 
-cv = generatecv.create_cv(academic_data, template="academic")
-cv.save("michael_chen_academic_cv.pdf")
+# Generate PDF
+try:
+    pdf_path = generatepdf(
+        cv_data=creative_data,
+        output_path="sarah_williams_creative_cv.pdf",
+        style="classic" # You might want a 'creative' style in the future
+    )
+    print(f"Creative CV generated at: {pdf_path}")
+except Exception as e:
+    print(f"Error generating creative CV: {e}")
 ```
 
-## Creative Professional Example
+## Recent Graduate Example (Python Data)
+
+Tailored for a recent graduate, emphasizing education, projects, and internships.
 
 ```python
-import generatecv
+from generatecv.pdf_generator import generatepdf
+from generatecv.models import CV, PersonalInfo, Education, Project, CompanyExperience, Role, Skill
 
-creative_data = {
-    "personal": {
-        "name": "Sarah Williams",
-        "email": "hello@sarahwilliams.design",
-        "phone": "+1 (555) 456-7890",
-        "location": "New York, NY",
-        "website": "sarahwilliams.design",
-        "behance": "behance.net/sarahwilliams",
-        "instagram": "@sarahdesigns"
-    },
-    "summary": "Award-winning graphic designer with expertise in branding and digital design",
-    "experience": [
-        {
-            "title": "Senior Graphic Designer",
-            "company": "Creative Agency Inc.",
-            "duration": "2020 - Present",
-            "description": "Lead designer for major brand campaigns",
-            "highlights": [
-                "Designed rebrand for Fortune 500 company",
-                "Won 3 design awards in 2022",
-                "Managed design team of 4"
+graduate_data = CV(
+    personal_info=PersonalInfo(
+        name="Alex Rodriguez",
+        email="alex.rodriguez@email.com",
+        phone="+1 (555) 234-5678",
+        location="Austin, TX",
+        linkedin="https://linkedin.com/in/alexrodriguez",
+        github="https://github.com/alexr",
+        summary="Recent computer science graduate seeking an entry-level software engineering position. Eager to apply academic knowledge and internship experience to real-world challenges.",
+        title="Aspiring Software Engineer"
+    ),
+    education=[
+        Education(
+            institution="University of Texas at Austin",
+            degree="Bachelor of Science in Computer Science",
+            location="Austin, TX",
+            start_date="2019-08",
+            end_date="2023-05",
+            gpa="3.7/4.0",
+            details="Honors: Dean's List, Magna Cum Laude. Relevant Coursework: Data Structures & Algorithms, Software Engineering, Database Systems, Machine Learning."
+        )
+    ],
+    projects=[
+        Project(
+            name="E-commerce Web Application",
+            description="Full-stack web app with user authentication and payment processing.",
+            technologies=["React", "Node.js", "MongoDB", "Stripe API"],
+            link="https://github.com/alexr/ecommerce-app", # Ensure HttpUrl validity
+            achievements=[
+                "Implemented responsive design for optimal viewing on all devices.",
+                "Integrated secure payment system using Stripe API.",
+                "Deployed on AWS Elastic Beanstalk."
+            ],
+            start_date="2022-09",
+            end_date="2023-01"
+        ),
+        Project(
+            name="Machine Learning Stock Predictor",
+            description="Python application using LSTM networks for stock price prediction.",
+            technologies=["Python", "TensorFlow", "Pandas", "NumPy"],
+            link="https://github.com/alexr/stock-predictor" # Ensure HttpUrl validity
+        )
+    ],
+    experience=[ # For internships
+        CompanyExperience(
+            company="StartupXYZ",
+            location="Austin, TX (Remote)",
+            roles=[
+                Role(
+                    title="Software Engineering Intern",
+                    start_date="2022-06",
+                    end_date="2022-08",
+                    description="Developed new features and fixed bugs for the company's flagship mobile application.",
+                    achievements=[
+                        "Contributed to codebase with 50+ commits in an Agile environment.",
+                        "Successfully fixed 15+ bugs and implemented 5 new features.",
+                        "Collaborated with cross-functional teams including product and QA."
+                    ]
+                )
             ]
-        }
+        )
     ],
-    "skills": {
-        "design": ["Adobe Creative Suite", "Figma", "Sketch"],
-        "specialties": ["Brand Identity", "UI/UX Design", "Print Design"],
-        "software": ["Photoshop", "Illustrator", "InDesign", "After Effects"]
-    },
-    "awards": [
-        {
-            "title": "Best Brand Identity Design",
-            "organization": "Design Awards 2022",
-            "year": "2022"
-        }
-    ],
-    "portfolio": [
-        {
-            "project": "Nike Campaign Redesign",
-            "description": "Complete visual identity overhaul",
-            "url": "sarahwilliams.design/nike"
-        }
+    skills=[
+        Skill(category="Programming Languages", name="Python, JavaScript, Java, C++"),
+        Skill(category="Web Technologies", name="React, HTML/CSS, Node.js, Express.js"),
+        Skill(category="Databases", name="MySQL, MongoDB, PostgreSQL"),
+        Skill(category="Tools & Platforms", name="Git, Docker, AWS (Basic), VS Code")
     ]
-}
+)
 
-cv = generatecv.create_cv(creative_data, template="creative")
-cv.save("sarah_williams_cv.pdf")
-```
+# Generate PDF
+try:
+    pdf_path = generatepdf(
+        cv_data=graduate_data,
+        output_path="alex_rodriguez_graduate_cv.pdf",
+        style="classic",
+        page_size="letter" # Example of using 'letter' page size
+    )
+    print(f"Graduate CV generated at: {pdf_path}")
+except Exception as e:
+    print(f"Error generating graduate CV: {e}")
 
-## Recent Graduate Example
-
-```python
-import generatecv
-
-graduate_data = {
-    "personal": {
-        "name": "Alex Rodriguez",
-        "email": "alex.rodriguez@email.com",
-        "phone": "+1 (555) 234-5678",
-        "location": "Austin, TX",
-        "linkedin": "linkedin.com/in/alexrodriguez",
-        "github": "github.com/alexr"
-    },
-    "objective": "Recent computer science graduate seeking entry-level software engineering position",
-    "education": [
-        {
-            "degree": "Bachelor of Science in Computer Science",
-            "institution": "University of Texas at Austin",
-            "location": "Austin, TX",
-            "year": "2023",
-            "gpa": "3.7/4.0",
-            "honors": ["Dean's List", "Magna Cum Laude"],
-            "relevant_coursework": [
-                "Data Structures & Algorithms",
-                "Software Engineering",
-                "Database Systems",
-                "Machine Learning"
-            ]
-        }
-    ],
-    "projects": [
-        {
-            "name": "E-commerce Web Application",
-            "description": "Full-stack web app with user authentication and payment processing",
-            "technologies": ["React", "Node.js", "MongoDB", "Stripe API"],
-            "url": "github.com/alexr/ecommerce-app",
-            "highlights": [
-                "Implemented responsive design",
-                "Integrated secure payment system",
-                "Deployed on AWS"
-            ]
-        },
-        {
-            "name": "Machine Learning Stock Predictor",
-            "description": "Python application using LSTM networks for stock price prediction",
-            "technologies": ["Python", "TensorFlow", "Pandas", "NumPy"],
-            "url": "github.com/alexr/stock-predictor"
-        }
-    ],
-    "experience": [
-        {
-            "title": "Software Engineering Intern",
-            "company": "StartupXYZ",
-            "duration": "Summer 2022",
-            "description": "Developed features for mobile application",
-            "highlights": [
-                "Contributed to codebase with 50+ commits",
-                "Fixed 15+ bugs and implemented 5 new features",
-                "Collaborated with cross-functional teams"
-            ]
-        }
-    ],
-    "skills": {
-        "programming": ["Python", "JavaScript", "Java", "C++"],
-        "web": ["React", "HTML/CSS", "Node.js", "Express"],
-        "databases": ["MySQL", "MongoDB", "PostgreSQL"],
-        "tools": ["Git", "Docker", "AWS", "VS Code"]
-    }
-}
-
-cv = generatecv.create_cv(graduate_data, template="modern")
-cv.save("alex_rodriguez_cv.pdf")
-```
-
-## Multiple Format Generation
-
-```python
-import generatecv
-
-# Use the same data for multiple formats
-data = {...}  # Your CV data
-
-cv = generatecv.create_cv(data)
-
-# Generate in different formats
-cv.save("cv.pdf")
-cv.save("cv.html", format="html")
-cv.save("cv.docx", format="docx")
-cv.save("cv.txt", format="text")
-```
-
-## Custom Template Options
-
-```python
-import generatecv
-
-# Custom styling options
-template_options = {
-    "font_family": "Georgia",
-    "font_size": 12,
-    "line_height": 1.4,
-    "margins": {
-        "top": 0.8,
-        "bottom": 0.8,
-        "left": 0.7,
-        "right": 0.7
-    },
-    "colors": {
-        "primary": "#2c3e50",
-        "secondary": "#3498db",
-        "accent": "#e74c3c",
-        "text": "#2c3e50"
-    },
-    "sections": {
-        "show_summary": True,
-        "show_skills": True,
-        "show_projects": True,
-        "experience_format": "detailed"
-    }
-}
-
-cv = generatecv.create_cv(data, template="modern", template_options=template_options)
-cv.save("custom_styled_cv.pdf")
-```
-
-## Batch CV Generation
-
-```python
-import generatecv
-import json
-
-# Generate CVs for multiple people
-def generate_team_cvs():
-    team_data = [
-        {"name": "person1", "data": {...}},
-        {"name": "person2", "data": {...}},
-        {"name": "person3", "data": {...}}
-    ]
-    
-    for person in team_data:
-        cv = generatecv.create_cv(person["data"])
-        cv.save(f"{person['name']}_cv.pdf")
-        print(f"Generated CV for {person['name']}")
-
-generate_team_cvs()
-```
-
-## Loading Data from File
-
-```python
-import generatecv
-import yaml
-import json
-
-# Load from YAML
-with open("cv_data.yaml", "r") as file:
-    yaml_data = yaml.safe_load(file)
-
-cv_yaml = generatecv.create_cv(yaml_data)
-cv_yaml.save("from_yaml.pdf")
-
-# Load from JSON
-with open("cv_data.json", "r") as file:
-    json_data = json.load(file)
-
-cv_json = generatecv.create_cv(json_data)
-cv_json.save("from_json.pdf")
 ```
 
 ## Error Handling
 
-```python
-import generatecv
-from generatecv.exceptions import CVError, TemplateError, ValidationError
+When using `generatepdf` or `yamltocv`, it's good practice to include error handling.
 
+```python
+from generatecv.pdf_generator import generatepdf, yamltocv
+from generatecv.models import CV, PersonalInfo # For basic data
+from pydantic import ValidationError
+import yaml # For yaml.YAMLError
+
+# Example data (can be more complex)
+sample_data = CV(
+    personal_info=PersonalInfo(name="Test User", email="test@example.com"),
+    education=[], # Must be provided, even if empty, as it's not optional in CV model
+    experience=[] # Must be provided, even if empty
+)
+
+# --- Test generatepdf ---
 try:
-    cv = generatecv.create_cv(data, template="invalid_template")
-    cv.save("output.pdf")
-except TemplateError as e:
-    print(f"Template error: {e}")
-except ValidationError as e:
-    print(f"Data validation error: {e}")
-except CVError as e:
-    print(f"CV generation error: {e}")
+    # Intentionally using an invalid style to trigger ValueError
+    generatepdf(cv_data=sample_data, output_path="error_test.pdf", style="non_existent_style")
+except ValueError as e:
+    print(f"Caught expected ValueError from generatepdf: {e}")
 except Exception as e:
-    print(f"Unexpected error: {e}")
+    print(f"Unexpected error from generatepdf: {e}")
+
+# --- Test yamltocv ---
+# Create a dummy valid YAML file
+valid_yaml_content = """
+personal_info:
+  name: "YAML User"
+  email: "yaml@example.com"
+education: []
+experience: []
+"""
+with open("temp_valid.yaml", "w") as f:
+    f.write(valid_yaml_content)
+
+# Create a dummy invalid YAML file (syntax error)
+invalid_yaml_syntax = """
+personal_info:
+  name: Bad YAML
+  email: bad@yaml: com # Invalid syntax
+education: []
+experience: []
+"""
+with open("temp_invalid_syntax.yaml", "w") as f:
+    f.write(invalid_yaml_syntax)
+
+# Create a dummy YAML with data validation issues
+invalid_yaml_data = """
+personal_info: # Missing name and email which are required
+  phone: "12345"
+education: []
+experience: []
+"""
+with open("temp_invalid_data.yaml", "w") as f:
+    f.write(invalid_yaml_data)
+
+# Test yamltocv with a non-existent file
+try:
+    yamltocv(yaml_path="non_existent_file.yaml")
+except FileNotFoundError as e:
+    print(f"Caught expected FileNotFoundError from yamltocv: {e}")
+except Exception as e:
+    print(f"Unexpected error from yamltocv (non_existent_file): {e}")
+
+# Test yamltocv with invalid YAML syntax
+try:
+    yamltocv(yaml_path="temp_invalid_syntax.yaml")
+except yaml.YAMLError as e:
+    print(f"Caught expected YAMLError from yamltocv: {e}")
+except Exception as e:
+    print(f"Unexpected error from yamltocv (invalid_syntax): {e}")
+
+# Test yamltocv with data validation error
+try:
+    yamltocv(yaml_path="temp_invalid_data.yaml")
+except ValidationError as e:
+    print(f"Caught expected ValidationError from yamltocv: {e}")
+except Exception as e:
+    print(f"Unexpected error from yamltocv (invalid_data): {e}")
+
+# Test yamltocv with valid file (should not raise an error here)
+try:
+    cv_obj = yamltocv(yaml_path="temp_valid.yaml")
+    print(f"Successfully loaded CV data for: {cv_obj.personal_info.name}")
+    # Optionally, generate PDF from this
+    generatepdf(cv_data=cv_obj, output_path="cv_from_temp_valid_yaml.pdf")
+    print("PDF generated from temp_valid.yaml")
+except Exception as e:
+    print(f"Error during valid yamltocv processing: {e}")
+
+# Clean up temporary files (optional)
+import os
+os.remove("temp_valid.yaml")
+os.remove("temp_invalid_syntax.yaml")
+os.remove("temp_invalid_data.yaml")
 ```
 
-## Template Comparison
-
-```python
-import generatecv
-
-# Generate the same CV with different templates
-templates = ["modern", "classic", "minimal", "creative"]
-
-for template in templates:
-    cv = generatecv.create_cv(data, template=template)
-    cv.save(f"cv_{template}.pdf")
-    print(f"Generated {template} version")
-```
-
-## Configuration Examples
-
-```python
-import generatecv
-
-# Set global defaults
-generatecv.config.set_default_template("modern")
-generatecv.config.set_default_format("pdf")
-generatecv.config.set_output_directory("./cvs/")
-
-# Create CV with global settings
-cv = generatecv.create_cv(data)
-cv.save("cv_with_defaults.pdf")
-
-# Override global settings for specific CV
-cv_custom = generatecv.create_cv(data, template="minimal")
-cv_custom.save("cv_minimal.pdf", format="html")
-```
-
-These examples demonstrate various use cases and features of generatecv. You can adapt them to your specific needs and requirements.
+These examples demonstrate various use cases and features of `generatecv` focusing on the `pdf_generator` and `models`. Adapt them to your specific needs. Remember that the `style` parameter currently only supports "classic", and `page_size` supports "A4" and "letter".

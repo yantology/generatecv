@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-issue-config.json
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/generatecv/generatecv/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Documentation
+    url: https://generatecv.github.io
+    about: Check our documentation for answers to common questions
+  - name: Security Issue
+    url: https://github.com/generatecv/generatecv/security/advisories/new
+    about: Report a security vulnerability privately

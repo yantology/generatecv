@@ -14,13 +14,81 @@ Or using `uv`:
 uv add generatecv
 ```
 
-## Basic Usage
+## Quick Start with Example Template
 
-The core of `generatecv` involves defining your CV data using Pydantic models and then using the `generatepdf` function to create a PDF document.
+The fastest way to get started is using the built-in example system:
 
-### 1. Define your CV Data in Python
+### 1. Get the Example Template
 
-You'll use models from `generatecv.models` to structure your information.
+After installing `generatecv`, use the CLI tool to download a starter template:
+
+```bash
+# Download example YAML to current directory (creates example.yaml)
+generatecv-example
+
+# Or specify a custom output path
+generatecv-example --output my_cv_data.yaml
+```
+
+This creates a YAML file with sample CV data that you can customize.
+
+### 2. Customize Your Data
+
+Edit the generated YAML file with your information:
+
+```yaml
+personal_info:
+  name: "Your Name"
+  email: "your.email@example.com"
+  phone: "+1234567890"
+  location: "Your City, Country"
+  summary: "Your professional summary"
+  title: "Your Job Title"
+
+education:
+  - institution: "Your University"
+    degree: "Your Degree"
+    start_date: "2019"
+    end_date: "2023"
+    # ... add more fields as needed
+
+experience:
+  - company: "Your Company"
+    location: "Company Location"
+    roles:
+      - title: "Your Role"
+        start_date: "2023-01"
+        end_date: "Present"
+        description: "Your role description"
+        # ... add achievements, etc.
+
+# Add skills, projects, and other sections as needed
+```
+
+### 3. Generate Your PDF
+
+```python
+from generatecv.pdf_generator import yamltocv, generatepdf
+
+# Load your CV data from YAML
+cv_data = yamltocv("example.yaml")  # or your custom filename
+
+# Generate PDF
+output_path = generatepdf(
+    cv_data=cv_data,
+    output_path="my_cv.pdf",
+    style="classic",
+    page_size="A4"
+)
+
+print(f"CV generated successfully: {output_path}")
+```
+
+## Alternative: Define Data in Python
+
+If you prefer to define your CV data directly in Python instead of using YAML, here's how:
+
+You'll use models from `generatecv.models` to structure your information:
 
 ```python
 from generatecv.pdf_generator import generatepdf
@@ -86,89 +154,6 @@ except ValueError as e:
     print(f"Error generating PDF: {e}")
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
-
-```
-
-### 2. Using a YAML Configuration File
-
-Alternatively, you can define your CV data in a YAML file and use the `yamltocv` function to load it, then pass the result to `generatepdf`.
-
-**a. Create a `cv_config.yaml` file:**
-
-```yaml
-personal_info:
-  name: "Your Name"
-  email: "your.email@example.com"
-  phone: "+1 234 567 8900"
-  location: "Your City, Country"
-  summary: "A brief professional summary."
-  title: "Your Professional Title"
-
-education:
-  - institution: "University Name"
-    degree: "Bachelor of Science"
-    start_date: "2018-09"
-    end_date: "2022-06"
-    location: "City, Country"
-    gpa: "3.8/4.0"
-
-experience:
-  - company: "Company Name"
-    location: "Company Location"
-    roles:
-      - title: "Software Engineer"
-        start_date: "2022-07"
-        end_date: "Present"
-        description: "Brief description of your role."
-        achievements:
-          - "Achievement A"
-          - "Achievement B"
-
-skills:
-  - category: "Languages"
-    name: "Python, Go, SQL"
-  - category: "Databases"
-    name: "PostgreSQL, MongoDB"
-
-# Add other sections like projects, certifications, languages as needed
-# Ensure the structure matches generatecv.models.CV
-```
-
-**b. Python script to process the YAML:**
-
-```python
-from generatecv.pdf_generator import yamltocv, generatepdf
-from generatecv.models import CV # For type hinting
-from pydantic import ValidationError
-import yaml # For yaml.YAMLError
-
-yaml_file_path = "cv_config.yaml"
-output_pdf_path = "my_cv_from_yaml.pdf"
-
-try:
-    # Load data from YAML and validate it
-    # Note: yamltocv has output_path, style, page_size params that are not used by it.
-    cv_data_from_yaml: CV = yamltocv(yaml_path=yaml_file_path)
-
-    # Generate PDF from the loaded data
-    generated_file = generatepdf(
-        cv_data=cv_data_from_yaml,
-        output_path=output_pdf_path,
-        style="classic",
-        page_size="A4"
-    )
-    print(f"CV from YAML generated successfully: {generated_file}")
-
-except FileNotFoundError:
-    print(f"Error: YAML file not found at {yaml_file_path}")
-except yaml.YAMLError as e:
-    print(f"Error parsing YAML file: {e}")
-except ValidationError as e:
-    print(f"Data validation error from YAML content: {e}")
-except ValueError as e: # For generatepdf errors like invalid style
-    print(f"Error generating PDF: {e}")
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
 ```
 
 ## Styles
@@ -196,8 +181,59 @@ generatepdf(cv_data=your_data, output_path="my_cv.pdf", page_size="letter")
 
 The `generatepdf` function is specifically designed to output PDF files. Other formats like HTML or DOCX are not supported by this function.
 
+## Command Line Tool
+
+The `generatecv-example` command supports these options:
+
+```bash
+# Download to current directory as example.yaml
+generatecv-example
+
+# Download to a specific path
+generatecv-example --output my_cv.yaml
+generatecv-example -o custom_filename.yaml
+
+# View help
+generatecv-example --help
+```
+
+## Error Handling
+
+When working with YAML files or generating PDFs, use proper error handling:
+
+```python
+from generatecv.pdf_generator import yamltocv, generatepdf
+from pydantic import ValidationError
+import yaml
+
+try:
+    # Load CV data from YAML
+    cv_data = yamltocv("example.yaml")
+    
+    # Generate PDF
+    output_path = generatepdf(
+        cv_data=cv_data,
+        output_path="my_cv.pdf",
+        style="classic",
+        page_size="A4"
+    )
+    print(f"Success: {output_path}")
+    
+except FileNotFoundError:
+    print("Error: YAML file not found")
+except yaml.YAMLError as e:
+    print(f"Error: Invalid YAML syntax - {e}")
+except ValidationError as e:
+    print(f"Error: Invalid CV data - {e}")
+except ValueError as e:
+    print(f"Error: Invalid parameters - {e}")
+except Exception as e:
+    print(f"Unexpected error: {e}")
+```
+
 ## Next Steps
 
 - Check out the [API Reference](api/index.md) for detailed documentation on models and functions.
-- See [Examples](examples.md) for more use cases.
+- See [Examples](examples.md) for more comprehensive use cases.
 - Learn about [Contributing](contributing.md) to the project if you're interested in extending its capabilities.
+</edits>

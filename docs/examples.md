@@ -2,6 +2,57 @@
 
 Here are some comprehensive examples of using `generatecv` to create professional CVs in PDF format.
 
+## Getting Started with the Example Template
+
+The easiest way to start is by using the built-in example system:
+
+### 1. Download Example Template
+
+```bash
+# Download example YAML to current directory
+generatecv-example
+
+# Or specify a custom output path
+generatecv-example --output my_cv_data.yaml
+```
+
+### 2. Customize and Generate
+
+```python
+from generatecv.pdf_generator import yamltocv, generatepdf
+
+# Load the example data (modify the YAML file first with your information)
+cv_data = yamltocv("example.yaml")
+
+# Generate your CV
+output_path = generatepdf(
+    cv_data=cv_data,
+    output_path="my_cv.pdf",
+    style="classic",
+    page_size="A4"
+)
+
+print(f"CV generated: {output_path}")
+```
+
+The example YAML contains realistic data that you can customize:
+
+```yaml
+personal_info:
+  name: Muhamad Wijayanto
+  email: work@yantology.dev
+  phone: "+6285804155314"
+  location: "East Java"
+  website: "https://www.yantology.dev"
+  linkedin: "https://linkedin.com/in/muhamad-wijayanto"
+  github: "https://github.com/yantology"
+  summary: "I am a passionate software engineer..."
+  title: "Backend Engineer"
+
+# Full example includes education, experience, skills, projects
+# Edit this file with your own information
+```
+
 ## Basic Example (Python Data)
 
 This example shows how to define CV data directly in Python using the Pydantic models and then generate a PDF.
@@ -88,9 +139,9 @@ except Exception as e:
     print(f"An unexpected error occurred: {e}")
 ```
 
-## Generating from a YAML File
+## Working with Custom YAML Files
 
-`generatecv` can load CV data from a YAML file.
+Beyond the example template, you can create completely custom YAML files. `generatecv` can load CV data from any properly structured YAML file.
 
 **1. Create your YAML data file (e.g., `my_cv_data.yaml`):**
 
@@ -141,7 +192,7 @@ custom_sections:
 # ... other sections like skills, projects, etc.
 ```
 
-**2. Python script to load YAML and generate PDF:**
+**2. Python script to load custom YAML and generate PDF:**
 
 ```python
 from generatecv.pdf_generator import yamltocv, generatepdf
@@ -154,7 +205,6 @@ output_pdf = "michael_chen_academic_cv.pdf"
 
 try:
     # Load and validate data from YAML
-    # Note: yamltocv has parameters output_path, style, page_size which are not used.
     cv_data_from_yaml: CV = yamltocv(yaml_path=yaml_file)
 
     # Generate PDF using the loaded data
@@ -177,6 +227,201 @@ except ValueError as ve_gen: # For errors from generatepdf (e.g. invalid style)
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 ```
+
+### Pro Tip: Start with the Example
+
+Instead of creating a YAML from scratch, it's recommended to start with the example template:
+
+```bash
+# Get the example template first
+generatecv-example --output michael_chen_cv.yaml
+
+# Then modify michael_chen_cv.yaml with the academic data above
+# This ensures you have the correct structure
+```
+
+## Complete CLI Workflow Example
+
+Here's a complete example showing the entire process from installation to PDF generation using the command-line tool:
+
+### Step 1: Install the Package
+
+```bash
+pip install generatecv
+```
+
+### Step 2: Download the Example Template
+
+```bash
+# Download to current directory as example.yaml
+generatecv-example
+
+# Or specify a custom name
+generatecv-example --output my_cv.yaml
+```
+
+### Step 3: View the Generated Template
+
+The command creates a YAML file with this structure:
+
+```bash
+cat example.yaml
+```
+
+```yaml
+personal_info:
+  name: Muhamad Wijayanto
+  email: work@yantology.dev
+  phone: "+6285804155314"
+  location: "East Java"
+  website: "https://www.yantology.dev"
+  linkedin: "https://linkedin.com/in/muhamad-wijayanto"
+  github: "https://github.com/yantology"
+  summary: "I am a passionate software engineer with a strong foundation in backend development..."
+  title: "Backend Engineer"
+
+education:
+  - institution: University of Jember
+    degree: Bachelor of Information Systems
+    start_date: "2019"
+    end_date: "2024"
+    location: "Jember, East Java"
+    details: "Learning about software engineering, data science, and machine learning."
+    gpa: "3.5/4.0"
+
+experience:
+  - company: Freelance
+    location: "Remote"
+    roles:
+      - title: Fullstack Engineer
+        start_date: "Jan 2025"
+        end_date: "Present"
+        description: "Developed and maintained web applications for various clients..."
+
+# ... and more sections
+```
+
+### Step 4: Customize Your Data
+
+Edit the YAML file with your information:
+
+```bash
+# Open in your preferred editor
+nano example.yaml
+# or
+code example.yaml
+# or
+vim example.yaml
+```
+
+### Step 5: Generate the PDF
+
+Create a Python script (`generate_cv.py`):
+
+```python
+#!/usr/bin/env python3
+"""
+Simple script to generate CV from YAML template
+"""
+
+from generatecv.pdf_generator import yamltocv, generatepdf
+from pydantic import ValidationError
+import yaml
+import sys
+
+def main():
+    yaml_file = "example.yaml"  # or sys.argv[1] for command line input
+    output_file = "my_cv.pdf"
+    
+    try:
+        print(f"Loading CV data from {yaml_file}...")
+        cv_data = yamltocv(yaml_file)
+        
+        print(f"Generating PDF...")
+        result_path = generatepdf(
+            cv_data=cv_data,
+            output_path=output_file,
+            style="classic",
+            page_size="A4"
+        )
+        
+        print(f"✅ Success! CV generated at: {result_path}")
+        
+    except FileNotFoundError:
+        print(f"❌ Error: File '{yaml_file}' not found")
+        sys.exit(1)
+    except yaml.YAMLError as e:
+        print(f"❌ Error: Invalid YAML syntax - {e}")
+        sys.exit(1)
+    except ValidationError as e:
+        print(f"❌ Error: Invalid CV data - {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Step 6: Run the Script
+
+```bash
+python generate_cv.py
+```
+
+Expected output:
+```
+Loading CV data from example.yaml...
+Generating PDF...
+✅ Success! CV generated at: my_cv.pdf
+```
+
+### CLI Options Reference
+
+The `generatecv-example` command supports these options:
+
+```bash
+# Show help
+generatecv-example --help
+
+# Download with default name (example.yaml)
+generatecv-example
+
+# Download with custom name
+generatecv-example --output my_resume.yaml
+generatecv-example -o custom_cv_data.yaml
+
+# Download to specific directory
+generatecv-example --output ~/Documents/my_cv.yaml
+```
+
+### One-liner for Quick Testing
+
+For rapid prototyping, you can combine everything into a single command:
+
+```bash
+# Download template, then generate PDF in Python
+generatecv-example && python -c "
+from generatecv.pdf_generator import yamltocv, generatepdf
+cv = yamltocv('example.yaml')
+print('Generated:', generatepdf(cv, 'quick_cv.pdf'))
+"
+```
+</edits>
+</edits>
+
+<edits>
+
+<old_text>
+# Clean up temporary files (optional)
+import os
+os.remove("temp_valid.yaml")
+os.remove("temp_invalid_syntax.yaml")
+os.remove("temp_invalid_data.yaml")
+```
+
+These examples demonstrate various use cases and features of `generatecv` focusing on the `pdf_generator` and `models`. Adapt them to your specific needs. Remember that the `style` parameter currently only supports "classic", and `page_size` supports "A4" and "letter".
 
 ## Creative Professional Example (using Python data)
 

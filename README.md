@@ -12,11 +12,21 @@ A Python package for generating professional CVs from structured data.
 
 ## Installation
 
-This project uses Python 3.13+ and can be installed using `uv`:
+```bash
+pip install generatecv
+```
+
+Or using `uv`:
+
+```bash
+uv add generatecv
+```
+
+For development:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/generatecv.git
+git clone https://github.com/yantology/generatecv.git
 cd generatecv
 
 # Create and activate a virtual environment
@@ -26,23 +36,97 @@ uv venv
 uv pip install -e ".[dev]"
 ```
 
-## Usage
+## Quick Start
 
-To generate a CV:
+### 1. Get the Example Template
+
+After installation, use the built-in command to get a starter template:
+
+```bash
+# Download example YAML to current directory
+generatecv-example
+
+# Or specify a custom output path
+generatecv-example --output my_cv_data.yaml
+```
+
+This creates an `example.yaml` file with sample CV data that you can customize.
+
+### 2. Customize Your Data
+
+Edit the generated YAML file with your information:
+
+```yaml
+personal_info:
+  name: "Your Name"
+  email: "your.email@example.com"
+  phone: "+1234567890"
+  location: "Your City, Country"
+  # ... customize other fields
+```
+
+### 3. Generate Your CV
 
 ```python
-from generatecv.cv_generator import CVGenerator, create_sample_cv
+from generatecv.pdf_generator import yamltocv, generatepdf
 
-# Create a CV generator (default is PDF format)
-generator = CVGenerator()
+# Load your CV data from YAML
+cv_data = yamltocv("example.yaml")  # or your custom filename
 
-# Generate from sample data
-cv_data = create_sample_cv()
-generator.generate(cv_data, "my_cv.pdf")
+# Generate PDF
+output_path = generatepdf(
+    cv_data=cv_data,
+    output_path="my_cv.pdf",
+    style="classic",
+    page_size="A4"
+)
 
-# Or load data from YAML
-cv_data = generator.load_data_from_yaml("path/to/your_cv.yaml")
-generator.generate(cv_data, "my_cv.pdf")
+print(f"CV generated: {output_path}")
+```
+
+### Alternative: Pure Python Usage
+
+You can also define your CV data directly in Python:
+
+```python
+from generatecv.pdf_generator import generatepdf
+from generatecv.models import CV, PersonalInfo, Education, CompanyExperience, Role
+
+cv_data = CV(
+    personal_info=PersonalInfo(
+        name="Your Name",
+        email="your.email@example.com",
+        phone="+1234567890",
+        location="Your City, Country",
+        summary="Your professional summary",
+        title="Your Job Title"
+    ),
+    education=[
+        Education(
+            institution="University Name",
+            degree="Your Degree",
+            start_date="2019",
+            end_date="2023"
+        )
+    ],
+    experience=[
+        CompanyExperience(
+            company="Company Name",
+            location="Company Location",
+            roles=[
+                Role(
+                    title="Your Role",
+                    start_date="2023-01",
+                    end_date="Present",
+                    description="Your role description"
+                )
+            ]
+        )
+    ]
+)
+
+# Generate PDF
+generatepdf(cv_data, "my_cv.pdf")
 ```
 
 ## Development

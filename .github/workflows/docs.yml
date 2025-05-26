@@ -35,18 +35,8 @@ jobs:
     
     - name: Create documentation structure
       run: |
+        # Only create docs/api directory if it doesn't exist
         mkdir -p docs/api
-        
-        # Create API documentation
-        cat > docs/api/index.md << 'EOF'
-        # API Reference
-        
-        Auto-generated API documentation for generatecv package.
-        
-        ## Modules
-        
-        Coming soon...
-        EOF
     
     - name: Create mkdocs.yml
       run: |
@@ -112,115 +102,11 @@ jobs:
               permalink: true
         EOF
     
-    - name: Create documentation files
+    - name: Verify documentation files exist
       run: |
-        mkdir -p docs
-        
-        # Create index.md
-        cat > docs/index.md << 'EOF'
-        # generatecv
-        
-        Professional CV/Resume generator for Python.
-        
-        ## Features
-        
-        - Generate professional CVs from structured data
-        - Multiple output formats (PDF, etc.)
-        - Customizable templates
-        - Easy to use Python API
-        
-        ## Quick Start
-        
-        ```bash
-        pip install generatecv
-        ```
-        
-        ```python
-        import generatecv
-        
-        # Your CV generation code here
-        ```
-        
-        ## Documentation
-        
-        - [Getting Started](getting-started.md)
-        - [API Reference](api/index.md)
-        - [Examples](examples.md)
-        EOF
-        
-        # Create getting-started.md
-        cat > docs/getting-started.md << 'EOF'
-        # Getting Started
-        
-        This guide will help you get started with generatecv.
-        
-        ## Installation
-        
-        ```bash
-        pip install generatecv
-        ```
-        
-        ## Basic Usage
-        
-        ```python
-        import generatecv
-        
-        # Basic CV generation example
-        # Add your examples here
-        ```
-        
-        ## Next Steps
-        
-        - Check out the [API Reference](api/index.md) for detailed documentation
-        - See [Examples](examples.md) for more use cases
-        EOF
-        
-        # Create examples.md
-        cat > docs/examples.md << 'EOF'
-        # Examples
-        
-        Here are some examples of using generatecv.
-        
-        ## Basic Example
-        
-        ```python
-        import generatecv
-        
-        # Add your examples here
-        ```
-        
-        ## Advanced Examples
-        
-        Coming soon...
-        EOF
-        
-        # Create contributing.md
-        cat > docs/contributing.md << 'EOF'
-        # Contributing
-        
-        We welcome contributions to generatecv!
-        
-        ## Development Setup
-        
-        ```bash
-        git clone https://github.com/yantology/generatecv.git
-        cd generatecv
-        uv sync --dev
-        ```
-        
-        ## Running Tests
-        
-        ```bash
-        uv run pytest
-        ```
-        
-        ## Code Quality
-        
-        ```bash
-        uv run ruff check .
-        uv run ruff format --check .
-        ```
-        EOF
+        # All documentation files already exist in docs/ directory
+        echo "Using existing documentation files from docs/ directory"
+        ls -la docs/
     
     - name: Build documentation
       run: |

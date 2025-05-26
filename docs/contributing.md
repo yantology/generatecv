@@ -6,7 +6,7 @@ We welcome contributions to generatecv! This document provides guidelines for co
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.9 or higher
 - [uv](https://docs.astral.sh/uv/) package manager
 
 ### Getting Started

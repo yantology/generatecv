@@ -1,11 +1,9 @@
 name: Documentation
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Python CI"] # Must match 'name:' of python-ci.yml
+    types: [completed]
 
 permissions:
   contents: write
@@ -16,115 +14,115 @@ jobs:
   build-docs:
     name: Build Documentation
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'
-    
-    - name: Install UV
-      uses: astral-sh/setup-uv@v3
-    
-    - name: Install dependencies
-      run: |
-        uv sync --dev
-        uv add --dev mkdocs mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
-    
-    - name: Create documentation structure
-      run: |
-        # Only create docs/api directory if it doesn't exist
-        mkdir -p docs/api
-    
-    - name: Create mkdocs.yml
-      run: |
-        cat > mkdocs.yml << 'EOF'
-        site_name: generatecv Documentation
-        site_description: Professional CV/Resume Generator
-        site_url: https://yantology.github.io/generatecv
-        repo_url: https://github.com/yantology/generatecv
-        repo_name: yantology/generatecv
-        
-        theme:
-          name: material
-          palette:
-            - scheme: default
-              primary: blue
-              accent: blue
-              toggle:
-                icon: material/brightness-7
-                name: Switch to dark mode
-            - scheme: slate
-              primary: blue
-              accent: blue
-              toggle:
-                icon: material/brightness-4
-                name: Switch to light mode
-          features:
-            - navigation.tabs
-            - navigation.sections
-            - navigation.expand
-            - navigation.top
-            - search.highlight
-            - search.suggest
-            - content.code.copy
-        
-        nav:
-          - Home: index.md
-          - Getting Started: getting-started.md
-          - API Reference: api/index.md
-          - Examples: examples.md
-          - Contributing: contributing.md
-        
-        plugins:
-          - search
-          - mkdocstrings:
-              handlers:
-                python:
-                  paths: [src]
-                  options:
-                    docstring_style: google
-        
-        markdown_extensions:
-          - admonition
-          - pymdownx.details
-          - pymdownx.superfences
-          - pymdownx.highlight:
-              anchor_linenums: true
-          - pymdownx.inlinehilite
-          - pymdownx.snippets
-          - pymdownx.tabbed:
-              alternate_style: true
-          - tables
-          - toc:
-              permalink: true
-        EOF
-    
-    - name: Verify documentation files exist
-      run: |
-        # All documentation files already exist in docs/ directory
-        echo "Using existing documentation files from docs/ directory"
-        ls -la docs/
-    
-    - name: Build documentation
-      run: |
-        uv run mkdocs build --verbose
-    
-    - name: Upload documentation artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: documentation
-        path: site/
-        retention-days: 7
-    
-    - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./site
-        user_name: 'github-actions[bot]'
-        user_email: 'github-actions[bot]@users.noreply.github.com'
-        commit_message: 'Deploy documentation: ${{ github.sha }}'
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          uv add --dev mkdocs mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
+
+      - name: Create documentation structure
+        run: |
+          # Only create docs/api directory if it doesn't exist
+          mkdir -p docs/api
+
+      - name: Create mkdocs.yml
+        run: |
+          cat > mkdocs.yml << 'EOF'
+          site_name: generatecv Documentation
+          site_description: Professional CV/Resume Generator
+          site_url: https://yantology.github.io/generatecv
+          repo_url: https://github.com/yantology/generatecv
+          repo_name: yantology/generatecv
+
+          theme:
+            name: material
+            palette:
+              - scheme: default
+                primary: blue
+                accent: blue
+                toggle:
+                  icon: material/brightness-7
+                  name: Switch to dark mode
+              - scheme: slate
+                primary: blue
+                accent: blue
+                toggle:
+                  icon: material/brightness-4
+                  name: Switch to light mode
+            features:
+              - navigation.tabs
+              - navigation.sections
+              - navigation.expand
+              - navigation.top
+              - search.highlight
+              - search.suggest
+              - content.code.copy
+
+          nav:
+            - Home: index.md
+            - Getting Started: getting-started.md
+            - API Reference: api/index.md
+            - Examples: examples.md
+            - Contributing: contributing.md
+
+          plugins:
+            - search
+            - mkdocstrings:
+                handlers:
+                  python:
+                    paths: [src]
+                    options:
+                      docstring_style: google
+
+          markdown_extensions:
+            - admonition
+            - pymdownx.details
+            - pymdownx.superfences
+            - pymdownx.highlight:
+                anchor_linenums: true
+            - pymdownx.inlinehilite
+            - pymdownx.snippets
+            - pymdownx.tabbed:
+                alternate_style: true
+            - tables
+            - toc:
+                permalink: true
+          EOF
+
+      - name: Verify documentation files exist
+        run: |
+          # All documentation files already exist in docs/ directory
+          echo "Using existing documentation files from docs/ directory"
+          ls -la docs/
+
+      - name: Build documentation
+        run: |
+          uv run mkdocs build --verbose
+
+      - name: Upload documentation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: site/
+          retention-days: 7
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: "Deploy documentation: ${{ github.sha }}"

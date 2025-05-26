@@ -6,7 +6,7 @@ We welcome contributions to generatecv! This document provides guidelines for co
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.9+
 - [uv](https://docs.astral.sh/uv/) package manager
 
 ### Getting Started
@@ -163,18 +163,18 @@ Use Google style docstrings:
 ```python
 def create_cv(data: dict, template: str = "modern") -> CV:
     """Create a new CV instance.
-    
+
     Args:
         data: Dictionary containing CV data
         template: Template name to use (default: "modern")
-        
+
     Returns:
         A new CV instance
-        
+
     Raises:
         ValidationError: If data validation fails
         TemplateError: If template is not found
-        
+
     Example:
         >>> cv = create_cv({"personal": {"name": "John Doe"}})
         >>> cv.save("cv.pdf")

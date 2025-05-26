@@ -62,3 +62,6 @@ dmypy.json
 .env.production.local
 
 # Package managers
+
+# Documentation build
+site/

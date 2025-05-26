@@ -49,8 +49,8 @@ Model Pydantic utama yang menampung semua data CV.
 ### Styles
 Modul `generatecv.styles` menangani penampilan visual dari PDF yang dihasilkan.
 
-#### `BaseStyle`
-::: generatecv.styles.base_style.BaseStyle
+#### `CVStyle`
+::: generatecv.styles.base_style.CVStyle
 
 #### `ClassicStyle`
 ::: generatecv.styles.classic_style.ClassicStyle

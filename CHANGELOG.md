@@ -4,6 +4,18 @@
 
 - Update changelog [skip ci]
 
+
+### Ci
+
+- **deps:** Bump orhun/git-cliff-action from 3 to 4 in /.github/workflows
+
+
+## [0.0.10] - 2025-05-26
+
+### Documentation
+
+- Update changelog [skip ci]
+
 - Update changelog [skip ci]
 
 

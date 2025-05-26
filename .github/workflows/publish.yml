@@ -1,8 +1,9 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Python CI"] # Must match 'name:' of python-ci.yml
+    types: [completed]
   workflow_dispatch: # Keep manual trigger
     inputs:
       test_pypi:
@@ -16,36 +17,39 @@ jobs:
     name: Build Distribution
     runs-on: ubuntu-latest
     outputs:
-      # True if release event with valid tag
-      should_publish_release: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') }}
-      # Actual tag name from release
-      tag_name: ${{ github.event.release.tag_name }}
+      # True if workflow_run from Python CI (main, push, success) AND tag v* found on commit
+      should_publish_workflow_run: ${{ steps.tag_info.outputs.tag_exists == 'true' && steps.trigger_check.outputs.is_valid_run_for_publish == 'true' }}
+      # Actual tag name, if found
+      tag_name: ${{ steps.tag_info.outputs.tag_name }}
 
     steps:
-    - name: Check if release is a candidate for publishing
+    - name: Check if workflow_run is a candidate for publishing
       id: trigger_check
       run: |
         is_valid='false'
-        if [[ "${{ github.event_name }}" == "release" && \
-              "${{ github.event.action }}" == "published" && \
-              "${{ github.event.release.tag_name }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        if [[ "${{ github.event_name }}" == "workflow_run" && \
+              "${{ github.event.workflow_run.conclusion }}" == "success" && \
+              "${{ github.event.workflow_run.name }}" == "Python CI" && \
+              "${{ github.event.workflow_run.event }}" == "push" && \
+              "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
           is_valid='true'
-          echo "Release is a candidate for publishing."
-          echo "Tag name: ${{ github.event.release.tag_name }}"
+          echo "Workflow run is a candidate for publishing."
         else
-          echo "Release is NOT a candidate for publishing."
+          echo "Workflow run is NOT a candidate for publishing."
           echo "Event name: ${{ github.event_name }}"
-          echo "Action: ${{ github.event.action }}"
-          echo "Tag name: ${{ github.event.release.tag_name }}"
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Workflow name: ${{ github.event.workflow_run.name }}"
+          echo "Triggering event: ${{ github.event.workflow_run.event }}"
+          echo "Head branch: ${{ github.event.workflow_run.head_branch }}"
         fi
-        echo "is_valid_release_for_publish=$is_valid" >> $GITHUB_OUTPUT
+        echo "is_valid_run_for_publish=$is_valid" >> $GITHUB_OUTPUT
 
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        # For release events, checkout the tag; for workflow_dispatch, use current ref
-        ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref }}
-        fetch-depth: 0
+        # If workflow_run, checkout specific SHA, otherwise use current ref (for dispatch)
+        ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
+        fetch-depth: 0 # Required for git tag --points-at to work
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -66,17 +70,20 @@ jobs:
         uv add --dev twine
         uv run twine check dist/*
 
-    - name: Validate tag format
+    - name: Get tag information (if valid workflow_run trigger)
       id: tag_info
-      if: github.event_name == 'release'
+      if: steps.trigger_check.outputs.is_valid_run_for_publish == 'true'
       run: |
-        TAG_NAME="${{ github.event.release.tag_name }}"
-        if [[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "Valid publishable tag: $TAG_NAME"
+        # We are already on the correct commit due to the checkout step
+        # Look for a tag like vX.Y.Z pointing to the current commit (HEAD)
+        TAG_NAME=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+        if [[ -n "$TAG_NAME" ]]; then
+          echo "Found publishable tag: $TAG_NAME at commit ${{ github.event.workflow_run.head_sha }}"
           echo "tag_exists=true" >> $GITHUB_OUTPUT
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
         else
-          echo "Invalid tag format: $TAG_NAME (expected vX.Y.Z)"
+          echo "No matching vX.Y.Z tag found at commit ${{ github.event.workflow_run.head_sha }} for this workflow_run."
+          git tag --points-at HEAD # Print all tags at HEAD for debugging
           echo "tag_exists=false" >> $GITHUB_OUTPUT
           echo "tag_name=" >> $GITHUB_OUTPUT
         fi
@@ -91,7 +98,7 @@ jobs:
   publish-to-pypi:
     name: Publish to PyPI
     if: >
-      (github.event_name == 'release' && needs.build.outputs.should_publish_release == 'true') ||
+      (github.event_name == 'workflow_run' && needs.build.outputs.should_publish_workflow_run == 'true') ||
       (github.event_name == 'workflow_dispatch' && !inputs.test_pypi)
     needs: build
     runs-on: ubuntu-latest
@@ -109,9 +116,9 @@ jobs:
         path: dist/
 
     - name: Publish to PyPI
-      if: needs.build.outputs.tag_name != '' || github.event_name == 'workflow_dispatch' # Ensure tag exists for release
+      if: needs.build.outputs.tag_name != '' || github.event_name == 'workflow_dispatch' # Ensure tag exists for workflow_run
       uses: pypa/gh-action-pypi-publish@release/v1
-      # For release events, pypa/gh-action-pypi-publish will use the tag from needs.build.outputs.tag_name
+      # For workflow_run, pypa/gh-action-pypi-publish will use the tag from needs.build.outputs.tag_name
       # if it's set and matches the version in the package.
       # For workflow_dispatch, it will publish based on the built package version.
 

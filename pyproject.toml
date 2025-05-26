@@ -1,7 +1,7 @@
 # Main project metadata
 [project]
 name = "generatecv"
-version = "0.0.13"
+version = "0.0.15"
 description = "generatecv is a Python package for generating professional CVs (resumes) from structured data."
 readme = "README.md"
 license = { text = "MIT" }
@@ -162,7 +162,7 @@ directory = "htmlcov"
 
 # Hatch build configuration
 [tool.hatch.build.targets.wheel]
-packages = ["src/generatecv"]
+packages = ["src/generatecv", "src/tool"]
 
 [tool.hatch.build.targets.sdist]
 include = ["/src", "/tests", "/README.md", "/LICENSE", "/pyproject.toml"]

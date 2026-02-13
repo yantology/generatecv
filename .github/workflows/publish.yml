@@ -47,7 +47,7 @@ jobs:
         echo "is_valid_run_for_publish=$is_valid" >> $GITHUB_OUTPUT
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         # If workflow_run, checkout specific SHA, otherwise use current ref (for dispatch)
         ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
